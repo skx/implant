@@ -328,6 +328,10 @@ func main() {
 	// Now we pipe our generated template through `gofmt`
 	//
 	if *CONFIG.Format {
+		if *CONFIG.Verbose {
+			fmt.Printf("Piping our output through `gofmt` and into %s\n", *CONFIG.Output)
+		}
+
 		fmtCmd := exec.Command("gofmt")
 		In, _ := fmtCmd.StdinPipe()
 		Out, _ := fmtCmd.StdoutPipe()
@@ -338,6 +342,9 @@ func main() {
 		fmtCmd.Wait()
 		ioutil.WriteFile(*CONFIG.Output, Bytes, 0644)
 	} else {
+		if *CONFIG.Verbose {
+			fmt.Printf("Writing output to %s\n", *CONFIG.Output)
+		}
 		ioutil.WriteFile(*CONFIG.Output, []byte(tmpl), 0644)
 	}
 
