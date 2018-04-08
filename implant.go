@@ -274,7 +274,6 @@ func main() {
 	//
 	if *CONFIG.Verbose {
 		fmt.Printf("Reading input directory %s\n", *CONFIG.Input)
-		fmt.Printf("Creating output file %s\n", *CONFIG.Output)
 	}
 
 	//
@@ -300,6 +299,21 @@ func main() {
 	files, err := findFiles(*CONFIG.Input)
 	if err != nil {
 		panic(err)
+	}
+
+	//
+	// If there were no files found we should abort.
+	//
+	if len(files) < 1 {
+		fmt.Printf("Failed to find files beneath %s\n", *CONFIG.Input)
+		os.Exit(1)
+	}
+
+	//
+	// Show how many files we found.
+	//
+	if *CONFIG.Verbose {
+		fmt.Printf("Found %d files.\n", len(files))
 	}
 
 	//
