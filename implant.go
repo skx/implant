@@ -53,7 +53,6 @@ import (
     "bytes"
     "compress/gzip"
     "encoding/hex"
-    "io"
     "io/ioutil"
     "errors"
 )
@@ -85,38 +84,36 @@ func init() {
     {{end}}
 }
 
-// Write gunzipped data to a Writer
-func gunzipWrite(w io.Writer, data []byte) error {
-	// Write gzipped data to the client
-	gr, err := gzip.NewReader(bytes.NewBuffer(data))
-	defer gr.Close()
-	data, err = ioutil.ReadAll(gr)
-	if err != nil {
-		return err
-	}
-	w.Write(data)
-	return nil
-}
-
 //
 // Return the contents of a resource.
 //
 func getResource( path string  ) ([]byte, error) {
     for _, entry := range( RESOURCES ) {
+	//
+	// We found the file contents.
+        //
         if ( entry.Filename == path ) {
-			//
-			// We found the file contents.
-			// Return the decoded version.
-			//
 			var raw bytes.Buffer
+
+			// Decode the data.
 			in, err := hex.DecodeString(entry.Contents)
 			if err != nil {
 				return nil, err
 			}
-			err = gunzipWrite(&raw, in)
+
+			// Gunzip the data to the client
+			gr, err := gzip.NewReader(bytes.NewBuffer(in))
+			defer gr.Close()
+			data, err := ioutil.ReadAll(gr)
 			if err != nil {
 				return nil, err
 			}
+			_, err = raw.Write(data)
+                        if ( err != nil ) {
+				return nil, err
+                        }
+
+			// Return it.
 			return raw.Bytes(), nil
         }
     }
