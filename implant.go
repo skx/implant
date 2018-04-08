@@ -119,6 +119,18 @@ func getResource( path string  ) ([]byte, error) {
     }
     return nil, errors.New( "Failed to find resource")
 }
+
+//
+// Return the names of available resources.
+//
+func getResources() []string {
+    var results []string
+
+    for _, entry := range( RESOURCES ) {
+        results = append( results, entry.Filename)
+    }
+    return results
+}
 `
 
 //

@@ -24,11 +24,13 @@ of each file beneath the `data/` subdirectory.
 
 ## API
 
-Once you have executed the above command you'll have a generated file
-which contains the following function to retrieve your contents at
-run-time:
+The generated file contains two functions to help you access your
+embedded data:
 
-     func getResource( path string  ) ([]byte, error) {
+* `getResources() []string`
+    * Returns a list of all the files embedded in your binary.
+* `getResource( path string  ) ([]byte, error)`
+    * Return the content of a single embedded file.
 
 So you could retrieve the content of the file `data/index.html` via
 this call:
@@ -38,8 +40,8 @@ this call:
 
 ## Data Storage
 
-To save space the generated file embeds the data compressed via gzip,
-albeit encoded via `encoding/hex`.
+To save space the embeded file contents are compressed with `gzip`, albeit
+encoded via `encoding/hex`.
 
 
 Steve
