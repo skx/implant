@@ -24,6 +24,21 @@ import (
 )
 
 //
+// This structure holds our command-line options.
+//
+type ConfigOptions struct {
+	Input   *string
+	Output  *string
+	Format  *bool
+	Verbose *bool
+}
+
+//
+// Now we have an instance of this structure
+//
+var CONFIG ConfigOptions
+
+//
 // This is the template which is used to generate the output file.
 //
 var TEMPLATE = `
@@ -163,6 +178,7 @@ func findFiles(input string) ([]Resource, error) {
 		return nil, err
 	}
 
+	// For each file we'll now add it to our list.
 	for _, file := range fileList {
 
 		//
@@ -178,6 +194,9 @@ func findFiles(input string) ([]Resource, error) {
 			return nil, err
 		}
 
+		//
+		// gzip the data.
+		//
 		var gzipped bytes.Buffer
 		err = gzipWrite(&gzipped, data)
 		if err != nil {
@@ -185,7 +204,8 @@ func findFiles(input string) ([]Resource, error) {
 		}
 
 		//
-		// Add the filename + data
+		// Add the filename + data, which is now encoded
+		// such that it is printable in our template.
 		//
 		tmp.Filename = file
 		tmp.Contents = hex.EncodeToString(gzipped.Bytes())
@@ -195,7 +215,7 @@ func findFiles(input string) ([]Resource, error) {
 }
 
 //
-// Given the array of files render our output file.
+// Given the array of resource-entries render our template.
 //
 func renderTemplate(entries []Resource) (string, error) {
 
@@ -222,29 +242,53 @@ func renderTemplate(entries []Resource) (string, error) {
 	return buf.String(), nil
 }
 
+//
+// This is our entry-point.
+//
 func main() {
 
 	//
 	// The command-line flags we support
 	//
-	input := flag.String("input", "data/", "The directory to read from.")
-	output := flag.String("output", "static.go", "The output file to generate.")
-	verbose := flag.Bool("verbose", false, "Should we be verbose.")
+	CONFIG.Input = flag.String("input", "data/", "The directory to read from.")
+	CONFIG.Output = flag.String("output", "static.go", "The output file to generate.")
+	CONFIG.Verbose = flag.Bool("verbose", false, "Should we be verbose.")
+	CONFIG.Format = flag.Bool("format", true, "Should we pipe our template through 'gofmt'?")
 
 	//
 	// Parse the flags
 	//
 	flag.Parse()
 
-	if *verbose {
-		fmt.Printf("Reading input directory %s\n", *input)
-		fmt.Printf("Creating output file %s\n", *output)
+	//
+	// If we're running verbosely show our settings.
+	//
+	if *CONFIG.Verbose {
+		fmt.Printf("Reading input directory %s\n", *CONFIG.Input)
+		fmt.Printf("Creating output file %s\n", *CONFIG.Output)
 	}
 
 	//
-	// Find the files.
+	// Test that the input path exists
 	//
-	files, err := findFiles(*input)
+	stat, err := os.Stat(*CONFIG.Input)
+	if err != nil {
+		fmt.Printf("Failed to stat %s - Did you forget to specify a directory to read?\n", *CONFIG.Input)
+		os.Exit(1)
+	}
+
+	//
+	// Test that the input path is a directory.
+	//
+	if !stat.IsDir() {
+		fmt.Printf("Error %s is not a directory!\n", *CONFIG.Input)
+		os.Exit(1)
+	}
+
+	//
+	// Now find the files beneath that path.
+	//
+	files, err := findFiles(*CONFIG.Input)
 	if err != nil {
 		panic(err)
 	}
@@ -260,18 +304,18 @@ func main() {
 	//
 	// Now we pipe our generated template through `gofmt`
 	//
-	fmtCmd := exec.Command("gofmt")
-	In, _ := fmtCmd.StdinPipe()
-	Out, _ := fmtCmd.StdoutPipe()
-	fmtCmd.Start()
-	In.Write([]byte(tmpl))
-	In.Close()
-	Bytes, _ := ioutil.ReadAll(Out)
-	fmtCmd.Wait()
-
-	//
-	// At this point we have "pretty" generated file.
-	//
-	ioutil.WriteFile(*output, Bytes, 0644)
+	if *CONFIG.Format {
+		fmtCmd := exec.Command("gofmt")
+		In, _ := fmtCmd.StdinPipe()
+		Out, _ := fmtCmd.StdoutPipe()
+		fmtCmd.Start()
+		In.Write([]byte(tmpl))
+		In.Close()
+		Bytes, _ := ioutil.ReadAll(Out)
+		fmtCmd.Wait()
+		ioutil.WriteFile(*CONFIG.Output, Bytes, 0644)
+	} else {
+		ioutil.WriteFile(*CONFIG.Output, []byte(tmpl), 0644)
+	}
 
 }
