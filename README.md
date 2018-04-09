@@ -1,12 +1,19 @@
 # implant
 
-This is a simple utility which allows data to be embedded directly in `golang`
-applications.
+`implant` is a simple utility which allows data to be embedded directly
+in `golang` applications (`implant` is a synonym of `embed`).
 
-The expected use-case is that you have a HTTP-server, or similar, which
-needs to work with files, but because you're wanting to deploy a single
-binary you do not wish to include this tree of support files with your
-releases - Instead you wish to embed them into your application
+The expected use-case is that you have a HTTP-server, or similar `golang`
+application which you wish to distribute as a single binary but which
+needs some template files, HTML files, or other media.
+
+Rather than distributing your binary along with a collection of files you
+instead embed the file contents in your application, and extract/use them
+at run-time.
+
+implant allows you to do this, by generating a file `static.go` which
+contains the contents of a directory hierarchy.  At run-time you can both
+list available files, and extract the contents of specific ones.
 
 
 
@@ -18,30 +25,30 @@ single directory you would run:
       $ implant -input data/ [-output static.go]
 
 This would generate the file `static.go` which contains the contents
-of each file beneath the `data/` subdirectory.
+of each file located beneath the `data/` directory.
 
 
 
-## API
+## Runtime API
 
-The generated file contains two functions to help you access your
-embedded data:
+The generated file contains two functions to help you access your embedded data:
 
 * `getResources() []string`
     * Returns a list of all the files embedded in your binary.
 * `getResource( path string  ) ([]byte, error)`
     * Return the content of a single embedded file.
 
-So you could retrieve the content of the file `data/index.html` via
-this call:
+So you could retrieve the content of the file `data/index.html` via this call:
 
       contents, err := getResource( "data/index.html" )
 
 
 ## Data Storage
 
-To save space the embeded file contents are compressed with `gzip`, albeit
-encoded via `encoding/hex`.
+To save space the embeded file contents are compressed with `gzip`, however
+this results in binary-data, so the compressed bytes are encoded via
+`encoding/hex`.  The use of the hex-representation does mean that some of
+the compression is effectively wasted, but it is a reasonable trade-off.
 
 
 Steve
