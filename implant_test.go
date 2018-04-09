@@ -185,6 +185,7 @@ func TestOutputTemplate(t *testing.T) {
 	//
 	ConfigOptions.Input = p
 	ConfigOptions.Verbose = true
+	ConfigOptions.Package = "main"
 
 	//
 	// Create a single file.
