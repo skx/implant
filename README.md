@@ -1,3 +1,8 @@
+[![Travis CI](https://img.shields.io/travis/skx/implant/master.svg?style=flat-square)](https://travis-ci.org/skx/implant)
+[![Go Report Card](https://goreportcard.com/badge/github.com/skx/implant)](https://goreportcard.com/report/github.com/skx/implant)
+[![license](https://img.shields.io/github/license/skx/implant.svg)](https://github.com/skx/implant/blob/master/LICENSE)
+[![Release](https://img.shields.io/github/release/skx/implant.svg)](https://github.com/skx/implant/releases/latest)
+
 # implant
 
 `implant` is a simple utility which allows data to be embedded directly
