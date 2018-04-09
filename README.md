@@ -51,5 +51,18 @@ this results in binary-data, so the compressed bytes are encoded via
 the compression is effectively wasted, but it is a reasonable trade-off.
 
 
+## Users
+
+Three of my small applications use this library:
+
+* https://github.com/skx/dns-api-go
+* https://github.com/skx/puppet-summary
+* https://github.com/skx/purppura
+
+You'll see in each case I've committed the generated `static.go` file to the repository, which means users who don't need to change any of the resources aren't forced to install this tool.
+
+I suggest a similar approach in your own deployments.
+
+
 Steve
 --
