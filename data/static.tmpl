@@ -14,7 +14,12 @@ import (
 )
 
 //
-// The definition of our resources
+// EmbeddedResource is the structure which is used to record details of
+// each embedded resource in your binary.
+//
+// The resource contains the (original) filename, relative to the input
+// directory `implant` was generated with, along with the original size
+// and the compressed/encoded data.
 //
 type EmbeddedResource struct {
     Filename string
@@ -23,7 +28,10 @@ type EmbeddedResource struct {
 }
 
 //
-// The list of our resources
+// RESOURCES is a simple array containing one entry for each embedded
+// resource.
+//
+// It is exposed to callers via the `getResources()` function.
 //
 var RESOURCES []EmbeddedResource
 
