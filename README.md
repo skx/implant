@@ -2,6 +2,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/skx/implant)](https://goreportcard.com/report/github.com/skx/implant)
 [![license](https://img.shields.io/github/license/skx/implant.svg)](https://github.com/skx/implant/blob/master/LICENSE)
 [![Release](https://img.shields.io/github/release/skx/implant.svg)](https://github.com/skx/implant/releases/latest)
+[![gocover store](http://gocover.io/_badge/github.com/skx/implant)](http://gocover.io/github.com/skx/implant)
 
 # implant
 
