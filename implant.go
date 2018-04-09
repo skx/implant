@@ -31,6 +31,7 @@ var ConfigOptions struct {
 	Input   string
 	Output  string
 	Exclude string
+	Package string
 	Format  bool
 	Verbose bool
 	Version bool
@@ -199,10 +200,24 @@ func renderTemplate(entries []Resource) (string, error) {
 	t := template.Must(template.New("tmpl").Parse(string(tmpl)))
 
 	//
+	// The data we add to our template.
+	//
+	var Templatedata struct {
+		Resources []Resource
+		Package   string
+	}
+
+	//
+	// Populate the template-data
+	//
+	Templatedata.Package = ConfigOptions.Package
+	Templatedata.Resources = entries
+
+	//
 	// Execute into a temporary buffer.
 	//
 	buf := &bytes.Buffer{}
-	err = t.Execute(buf, entries)
+	err = t.Execute(buf, Templatedata)
 
 	//
 	// If there were errors, then show them.
@@ -227,6 +242,7 @@ func main() {
 	flag.StringVar(&ConfigOptions.Exclude, "exclude", "", "A regular expression of files to ignore, for example '.git'.")
 	flag.StringVar(&ConfigOptions.Input, "input", "data/", "The directory to read from.")
 	flag.StringVar(&ConfigOptions.Output, "output", "static.go", "The output file to generate.")
+	flag.StringVar(&ConfigOptions.Package, "package", "main", "The (go) package that the generated file is part of.")
 	flag.BoolVar(&ConfigOptions.Verbose, "verbose", false, "Should we be verbose.")
 	flag.BoolVar(&ConfigOptions.Format, "format", true, "Should we pipe our template through 'gofmt'?")
 	flag.BoolVar(&ConfigOptions.Version, "version", false, "Should we report our version and exit?")

@@ -3,7 +3,7 @@
 //
 // Local edits will be lost.
 //
-package main
+package {{.Package}}
 
 import (
     "bytes"
@@ -33,9 +33,9 @@ func init() {
 
     var tmp EmbeddedResource
 
-    {{ range . }}
-	tmp.Filename = "{{ .Filename }}"
-        tmp.Contents = "{{ .Contents }}"
+    {{range .Resources}}
+	tmp.Filename = "{{.Filename}}"
+        tmp.Contents = "{{.Contents}}"
         RESOURCES = append( RESOURCES, tmp )
     {{end}}
 }
