@@ -25,7 +25,10 @@ import (
 )
 
 //
-// This holds our command-line options.
+// ConfigOptions is the globally visible structure which is designed to
+// hold our configuration-options - as set by the command-line flags.
+//
+// It is perhaps poor practice to do things this way, but it eases coding.
 //
 var ConfigOptions struct {
 	Input   string
@@ -45,8 +48,9 @@ var (
 )
 
 //
-// This is the structure of resources we've found, which we'll embed in the
-// output template.
+// Resource is the structure used to temporarily hold data about all the
+// static-resources we've discovered and will write out to the generated
+// `static.go` file.
 //
 type Resource struct {
 	Filename string
@@ -66,9 +70,12 @@ func gzipWrite(w io.Writer, data []byte) error {
 }
 
 //
-// Should we include this file/resource?
+// ShouldInclude is invoked by our filesystem-walker, and determines whether
+// any particular directory entry beneath the input tree should be included
+// in our generated `static.go` file.
 //
-// We skip directories, and we might skip by regular expression too
+// We skip directories, and we might skip particular entries via a user-supplied
+// regular expression too.
 //
 func ShouldInclude(path string) bool {
 
