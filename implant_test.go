@@ -118,3 +118,50 @@ func TestRegexpExclusions(t *testing.T) {
 	os.RemoveAll(ConfigOptions.Input)
 
 }
+
+//
+// Test we can find files.
+//
+func TestFileFinding(t *testing.T) {
+
+	//
+	// Create a temporary directory
+	//
+	p, err := ioutil.TempDir(os.TempDir(), "prefix")
+	if err != nil {
+		t.Errorf("Error setting up test.")
+	}
+
+	//
+	// Setup our options.
+	//
+	ConfigOptions.Input = p
+	ConfigOptions.Verbose = true
+
+	//
+	// Create a single file.
+	//
+	txt := []byte("hello, world!\n")
+	err = ioutil.WriteFile(filepath.Join(p, "bar"), txt, 0644)
+
+	//
+	// Find our files.
+	//
+	out, err := findFiles(ConfigOptions.Input)
+	if err != nil {
+		t.Errorf("Error finding files!")
+	}
+
+	//
+	// We should have one output result.
+	//
+	if len(out) != 1 {
+		t.Errorf("We expected to find one file!")
+	}
+
+	//
+	// Cleanup our temporary directory
+	//
+	os.RemoveAll(ConfigOptions.Input)
+
+}
