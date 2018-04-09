@@ -57,12 +57,14 @@ Please consult the output of `implant -help` for details.
 
 The generated file contains two functions to help you access your embedded data:
 
-* `getResources() []string`
-    * Returns a list of all the files embedded in the your binary.
 * `getResource( path string  ) ([]byte, error)`
     * Return the content of a single embedded file.
+* `getResources() []EmbeddedResource`
+    * Returns a list of all the embedded resources in the your binary.
+    * The returned structure contains the original name of the file, the size, and the contents in encoded form.
+    * It is assumed you'll use `getResource` to get the original data, rather than trying to decode & decompress manually.
 
-So you could retrieve the content of the file `data/index.html` via this call:
+Sample usage of retrieving the content of the file `data/index.html` would look like:
 
       contents, err := getResource( "data/index.html" )
 

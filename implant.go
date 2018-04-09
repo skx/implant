@@ -51,6 +51,7 @@ var (
 type Resource struct {
 	Filename string
 	Contents string
+	Length   int
 }
 
 //
@@ -179,6 +180,7 @@ func findFiles(input string) ([]Resource, error) {
 		//
 		tmp.Filename = file
 		tmp.Contents = hex.EncodeToString(gzipped.Bytes())
+		tmp.Length = len(data)
 		entries = append(entries, tmp)
 	}
 	return entries, nil

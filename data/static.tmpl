@@ -19,6 +19,7 @@ import (
 type EmbeddedResource struct {
     Filename string
     Contents string
+    Length   int
 }
 
 //
@@ -36,6 +37,7 @@ func init() {
     {{range .Resources}}
 	tmp.Filename = "{{.Filename}}"
         tmp.Contents = "{{.Contents}}"
+        tmp.Length = {{.Length}}
         RESOURCES = append( RESOURCES, tmp )
     {{end}}
 }
@@ -77,13 +79,8 @@ func getResource( path string  ) ([]byte, error) {
 }
 
 //
-// Return the names of available resources.
+// Return the available resources.
 //
-func getResources() []string {
-    var results []string
-
-    for _, entry := range( RESOURCES ) {
-        results = append( results, entry.Filename)
-    }
-    return results
+func getResources() []EmbeddedResource {
+    return RESOURCES
 }
