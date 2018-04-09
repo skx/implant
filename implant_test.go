@@ -92,7 +92,7 @@ func TestRegexpExclusions(t *testing.T) {
 	//
 	tests := []TestCase{
 		{"test", false},
-		{"tgit", true},
+		{"tgit", true}, // Excluded because ".git" matches "tgit"
 		{"git", false},
 		{".git", true},
 		{".gitignore", true}}
