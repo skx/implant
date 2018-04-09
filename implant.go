@@ -24,19 +24,14 @@ import (
 )
 
 //
-// This structure holds our command-line options.
+// This holds our command-line options.
 //
-type ConfigOptions struct {
-	Input   *string
-	Output  *string
-	Format  *bool
-	Verbose *bool
+var ConfigOptions struct {
+	Input   string
+	Output  string
+	Format  bool
+	Verbose bool
 }
-
-//
-// Now we have an instance of this structure
-//
-var CONFIG ConfigOptions
 
 //
 // This is the template which is used to generate the output file.
@@ -259,10 +254,10 @@ func main() {
 	//
 	// The command-line flags we support
 	//
-	CONFIG.Input = flag.String("input", "data/", "The directory to read from.")
-	CONFIG.Output = flag.String("output", "static.go", "The output file to generate.")
-	CONFIG.Verbose = flag.Bool("verbose", false, "Should we be verbose.")
-	CONFIG.Format = flag.Bool("format", true, "Should we pipe our template through 'gofmt'?")
+	flag.StringVar(&ConfigOptions.Input, "input", "data/", "The directory to read from.")
+	flag.StringVar(&ConfigOptions.Output, "output", "static.go", "The output file to generate.")
+	flag.BoolVar(&ConfigOptions.Verbose, "verbose", false, "Should we be verbose.")
+	flag.BoolVar(&ConfigOptions.Format, "format", true, "Should we pipe our template through 'gofmt'?")
 
 	//
 	// Parse the flags
@@ -272,16 +267,16 @@ func main() {
 	//
 	// If we're running verbosely show our settings.
 	//
-	if *CONFIG.Verbose {
-		fmt.Printf("Reading input directory %s\n", *CONFIG.Input)
+	if ConfigOptions.Verbose {
+		fmt.Printf("Reading input directory %s\n", ConfigOptions.Input)
 	}
 
 	//
 	// Test that the input path exists
 	//
-	stat, err := os.Stat(*CONFIG.Input)
+	stat, err := os.Stat(ConfigOptions.Input)
 	if err != nil {
-		fmt.Printf("Failed to stat %s - Did you forget to specify a directory to read?\n", *CONFIG.Input)
+		fmt.Printf("Failed to stat %s - Did you forget to specify a directory to read?\n", ConfigOptions.Input)
 		os.Exit(1)
 	}
 
@@ -289,14 +284,14 @@ func main() {
 	// Test that the input path is a directory.
 	//
 	if !stat.IsDir() {
-		fmt.Printf("Error %s is not a directory!\n", *CONFIG.Input)
+		fmt.Printf("Error %s is not a directory!\n", ConfigOptions.Input)
 		os.Exit(1)
 	}
 
 	//
 	// Now find the files beneath that path.
 	//
-	files, err := findFiles(*CONFIG.Input)
+	files, err := findFiles(ConfigOptions.Input)
 	if err != nil {
 		panic(err)
 	}
@@ -305,14 +300,14 @@ func main() {
 	// If there were no files found we should abort.
 	//
 	if len(files) < 1 {
-		fmt.Printf("Failed to find files beneath %s\n", *CONFIG.Input)
+		fmt.Printf("Failed to find files beneath %s\n", ConfigOptions.Input)
 		os.Exit(1)
 	}
 
 	//
 	// Show how many files we found.
 	//
-	if *CONFIG.Verbose {
+	if ConfigOptions.Verbose {
 		fmt.Printf("Found %d files.\n", len(files))
 	}
 
@@ -327,9 +322,9 @@ func main() {
 	//
 	// Now we pipe our generated template through `gofmt`
 	//
-	if *CONFIG.Format {
-		if *CONFIG.Verbose {
-			fmt.Printf("Piping our output through `gofmt` and into %s\n", *CONFIG.Output)
+	if ConfigOptions.Format {
+		if ConfigOptions.Verbose {
+			fmt.Printf("Piping our output through `gofmt` and into %s\n", ConfigOptions.Output)
 		}
 
 		fmtCmd := exec.Command("gofmt")
@@ -340,12 +335,12 @@ func main() {
 		In.Close()
 		Bytes, _ := ioutil.ReadAll(Out)
 		fmtCmd.Wait()
-		ioutil.WriteFile(*CONFIG.Output, Bytes, 0644)
+		ioutil.WriteFile(ConfigOptions.Output, Bytes, 0644)
 	} else {
-		if *CONFIG.Verbose {
-			fmt.Printf("Writing output to %s\n", *CONFIG.Output)
+		if ConfigOptions.Verbose {
+			fmt.Printf("Writing output to %s\n", ConfigOptions.Output)
 		}
-		ioutil.WriteFile(*CONFIG.Output, []byte(tmpl), 0644)
+		ioutil.WriteFile(ConfigOptions.Output, []byte(tmpl), 0644)
 	}
 
 }
