@@ -49,6 +49,9 @@ func TestSimpleExclusions(t *testing.T) {
 	//
 	txt := []byte("hello, world!\n")
 	err = ioutil.WriteFile(filepath.Join(p, "bar"), txt, 0644)
+	if err != nil {
+		t.Errorf("Failed to write our data to a file")
+	}
 	if !ShouldInclude(filepath.Join(p, "bar")) {
 		t.Errorf("We should include a file")
 	}
@@ -105,6 +108,9 @@ func TestRegexpExclusions(t *testing.T) {
 		txt := []byte("hello, world!\n")
 		path := filepath.Join(p, entry.Filename)
 		err = ioutil.WriteFile(path, txt, 0644)
+		if err != nil {
+			t.Errorf("Failed to write our data to a file")
+		}
 
 		out := ShouldInclude(path)
 
