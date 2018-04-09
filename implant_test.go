@@ -1,5 +1,5 @@
 //
-// Simple testing of the HTTP-server
+// Simple testing of our package.
 //
 //
 package main
@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -157,6 +158,65 @@ func TestFileFinding(t *testing.T) {
 	//
 	if len(out) != 1 {
 		t.Errorf("We expected to find one file!")
+	}
+
+	//
+	// Cleanup our temporary directory
+	//
+	os.RemoveAll(ConfigOptions.Input)
+
+}
+
+//
+// Test we can output a template.
+//
+func TestOutputTemplate(t *testing.T) {
+
+	//
+	// Create a temporary directory
+	//
+	p, err := ioutil.TempDir(os.TempDir(), "prefix")
+	if err != nil {
+		t.Errorf("Error setting up test.")
+	}
+
+	//
+	// Setup our options.
+	//
+	ConfigOptions.Input = p
+	ConfigOptions.Verbose = true
+
+	//
+	// Create a single file.
+	//
+	txt := []byte("hello, world!\n")
+	err = ioutil.WriteFile(filepath.Join(p, "input"), txt, 0644)
+
+	//
+	// Find our files.
+	//
+	out, err := findFiles(ConfigOptions.Input)
+	if err != nil {
+		t.Errorf("Error finding files!")
+	}
+
+	//
+	// Render our template
+	//
+	out2, err := renderTemplate(out)
+	if err != nil {
+		t.Errorf("Error rendering template")
+	}
+
+	//
+	// Ensure that our output looks valid.
+	//
+	if len(out2) < 1 {
+		t.Errorf("Rendered template was empty")
+	}
+
+	if !strings.Contains(out2, "package main") {
+		t.Errorf("Rendered template was not in the main-package")
 	}
 
 	//
