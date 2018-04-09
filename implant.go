@@ -33,7 +33,15 @@ var ConfigOptions struct {
 	Exclude string
 	Format  bool
 	Verbose bool
+	Version bool
 }
+
+//
+// Our version number.
+//
+var (
+	version = "master/latest"
+)
 
 //
 // This is the structure of resources we've found, which we'll embed in the
@@ -183,8 +191,8 @@ func renderTemplate(entries []Resource) (string, error) {
 	//
 	// Create our template object
 	//
-	tmpl,err := getResource( "data/static.tmpl" )
-	if ( err != nil ) {
+	tmpl, err := getResource("data/static.tmpl")
+	if err != nil {
 		return "", err
 	}
 
@@ -194,7 +202,7 @@ func renderTemplate(entries []Resource) (string, error) {
 	// Execute into a temporary buffer.
 	//
 	buf := &bytes.Buffer{}
-	err= t.Execute(buf, entries)
+	err = t.Execute(buf, entries)
 
 	//
 	// If there were errors, then show them.
@@ -221,11 +229,20 @@ func main() {
 	flag.StringVar(&ConfigOptions.Output, "output", "static.go", "The output file to generate.")
 	flag.BoolVar(&ConfigOptions.Verbose, "verbose", false, "Should we be verbose.")
 	flag.BoolVar(&ConfigOptions.Format, "format", true, "Should we pipe our template through 'gofmt'?")
+	flag.BoolVar(&ConfigOptions.Version, "version", false, "Should we report our version and exit?")
 
 	//
 	// Parse the flags
 	//
 	flag.Parse()
+
+	//
+	// Showing our version?
+	//
+	if ConfigOptions.Version {
+		fmt.Printf("implant %s\n", version)
+		os.Exit(0)
+	}
 
 	//
 	// If we're running verbosely show our settings.
