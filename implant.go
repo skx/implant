@@ -36,101 +36,6 @@ var ConfigOptions struct {
 }
 
 //
-// This is the template which is used to generate the output file.
-//
-var TEMPLATE = `
-//
-// This file was generated via github.com/skx/implant/
-//
-// Local edits will be lost.
-//
-package main
-
-import (
-    "bytes"
-    "compress/gzip"
-    "encoding/hex"
-    "io/ioutil"
-    "errors"
-)
-
-//
-// The definition of our resources
-//
-type EmbeddedResource struct {
-    Filename string
-    Contents string
-}
-
-//
-// The list of our resources
-//
-var RESOURCES []EmbeddedResource
-
-//
-// Populate our resources
-//
-func init() {
-
-    var tmp EmbeddedResource
-
-    {{ range . }}
-	tmp.Filename = "{{ .Filename }}"
-        tmp.Contents = "{{ .Contents }}"
-        RESOURCES = append( RESOURCES, tmp )
-    {{end}}
-}
-
-//
-// Return the contents of a resource.
-//
-func getResource( path string  ) ([]byte, error) {
-    for _, entry := range( RESOURCES ) {
-	//
-	// We found the file contents.
-        //
-        if ( entry.Filename == path ) {
-			var raw bytes.Buffer
-
-			// Decode the data.
-			in, err := hex.DecodeString(entry.Contents)
-			if err != nil {
-				return nil, err
-			}
-
-			// Gunzip the data to the client
-			gr, err := gzip.NewReader(bytes.NewBuffer(in))
-			defer gr.Close()
-			data, err := ioutil.ReadAll(gr)
-			if err != nil {
-				return nil, err
-			}
-			_, err = raw.Write(data)
-                        if ( err != nil ) {
-				return nil, err
-                        }
-
-			// Return it.
-			return raw.Bytes(), nil
-        }
-    }
-    return nil, errors.New( "Failed to find resource")
-}
-
-//
-// Return the names of available resources.
-//
-func getResources() []string {
-    var results []string
-
-    for _, entry := range( RESOURCES ) {
-        results = append( results, entry.Filename)
-    }
-    return results
-}
-`
-
-//
 // This is the structure of resources we've found, which we'll embed in the
 // output template.
 //
@@ -278,13 +183,18 @@ func renderTemplate(entries []Resource) (string, error) {
 	//
 	// Create our template object
 	//
-	t := template.Must(template.New("tmpl").Parse(TEMPLATE))
+	tmpl,err := getResource( "data/static.tmpl" )
+	if ( err != nil ) {
+		return "", err
+	}
+
+	t := template.Must(template.New("tmpl").Parse(string(tmpl)))
 
 	//
 	// Execute into a temporary buffer.
 	//
 	buf := &bytes.Buffer{}
-	err := t.Execute(buf, entries)
+	err= t.Execute(buf, entries)
 
 	//
 	// If there were errors, then show them.
