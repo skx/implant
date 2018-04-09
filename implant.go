@@ -293,7 +293,8 @@ func main() {
 	//
 	files, err := findFiles(ConfigOptions.Input)
 	if err != nil {
-		panic(err)
+		fmt.Printf("Error processing files: %s\n", err.Error())
+		os.Exit(1)
 	}
 
 	//
