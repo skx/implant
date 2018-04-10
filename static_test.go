@@ -61,3 +61,20 @@ func TestResourceMatches(t *testing.T) {
 		t.Errorf("Embedded and real resources have different content.")
 	}
 }
+
+//
+// Test that a missing resource is handled.
+//
+func TestMissingResource(t *testing.T) {
+
+	//
+	// Get the data from our embedded copy
+	//
+	data, err := getResource("moi/kissa")
+	if data != nil {
+		t.Errorf("We expected to find no data, but got some.")
+	}
+	if err == nil {
+		t.Errorf("We expected an error loading a missing resource, but got none.")
+	}
+}
