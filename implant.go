@@ -156,7 +156,7 @@ func ShouldInclude(path string) bool {
 // Find all the files in the given directory, returning an array
 // of structures.
 //
-func findFiles(input string) ([]Resource, error) {
+func findFiles() ([]Resource, error) {
 
 	// The resources we've found.
 	var entries []Resource
@@ -165,7 +165,7 @@ func findFiles(input string) ([]Resource, error) {
 	fileList := []string{}
 
 	// Recursively look for files to add.
-	err := filepath.Walk(input, func(path string, f os.FileInfo, err error) error {
+	err := filepath.Walk(ConfigOptions.Input, func(path string, f os.FileInfo, err error) error {
 		if ConfigOptions.Verbose {
 			fmt.Printf("Found file: %s\n", path)
 		}
@@ -276,6 +276,83 @@ func renderTemplate(entries []Resource) (string, error) {
 }
 
 //
+// This is our main driver
+//
+func Implant() {
+	//
+	// If we're running verbosely show our settings.
+	//
+	if ConfigOptions.Verbose {
+		fmt.Printf("Reading input directory %s\n", ConfigOptions.Input)
+	}
+
+	//
+	// Check we've been given an input path that a) exists and b) is
+	// a directory.
+	//
+	if !CheckInput() {
+		os.Exit(1)
+	}
+
+	//
+	// Now find the files beneath that path.
+	//
+	files, err := findFiles()
+	if err != nil {
+		fmt.Printf("Error processing files: %s\n", err.Error())
+		return
+	}
+
+	//
+	// If there were no files found we should abort.
+	//
+	if len(files) < 1 {
+		fmt.Printf("Failed to find files beneath %s\n", ConfigOptions.Input)
+		return
+	}
+
+	//
+	// Show how many files we found.
+	//
+	if ConfigOptions.Verbose {
+		fmt.Printf("Populating static.go with the following files.\n")
+		for _, ent := range files {
+			fmt.Printf("\t%s\n", ent.Filename)
+		}
+	}
+
+	//
+	// Render our template with their details
+	//
+	tmpl, err := renderTemplate(files)
+	if err != nil {
+		fmt.Printf("Failed to render template %s\n", err.Error())
+		return
+	}
+
+	//
+	// This is the output of the template
+	//
+	output := []byte(tmpl)
+
+	//
+	// Optionally we pipe our generated output through `gofmt`
+	//
+	if ConfigOptions.Format {
+		if ConfigOptions.Verbose {
+			fmt.Printf("Piping our output through `gofmt` and into %s\n", ConfigOptions.Output)
+		}
+
+		output = PipeCommand("gofmt", []byte(tmpl))
+	}
+
+	//
+	// Write our output, formatted or not, to our file.
+	//
+	ioutil.WriteFile(ConfigOptions.Output, output, 0644)
+}
+
+//
 // This is our entry-point.
 //
 func main() {
@@ -304,78 +381,5 @@ func main() {
 		os.Exit(0)
 	}
 
-	//
-	// If we're running verbosely show our settings.
-	//
-	if ConfigOptions.Verbose {
-		fmt.Printf("Reading input directory %s\n", ConfigOptions.Input)
-	}
-
-	//
-	// Check we've been given an input path that a) exists and b) is
-	// a directory.
-	//
-	if !CheckInput() {
-		os.Exit(1)
-	}
-
-	//
-	// Now find the files beneath that path.
-	//
-	files, err := findFiles(ConfigOptions.Input)
-	if err != nil {
-		fmt.Printf("Error processing files: %s\n", err.Error())
-		os.Exit(1)
-	}
-
-	//
-	// If there were no files found we should abort.
-	//
-	if len(files) < 1 {
-		fmt.Printf("Failed to find files beneath %s\n", ConfigOptions.Input)
-		os.Exit(1)
-	}
-
-	//
-	// Show how many files we found.
-	//
-	if ConfigOptions.Verbose {
-		fmt.Printf("Populating static.go with the following files.\n")
-		for _, ent := range files {
-			fmt.Printf("\t%s\n", ent.Filename)
-		}
-	}
-
-	//
-	// Render our template with their details
-	//
-	tmpl, err := renderTemplate(files)
-	if err != nil {
-		panic(err)
-	}
-
-	//
-	// This is the output of the template
-	//
-	output := []byte(tmpl)
-
-	//
-	// Optionally we pipe our generated output through `gofmt`
-	//
-	if ConfigOptions.Format {
-		if ConfigOptions.Verbose {
-			fmt.Printf("Piping our output through `gofmt` and into %s\n", ConfigOptions.Output)
-		}
-
-		output = PipeCommand("gofmt", []byte(tmpl))
-	}
-
-	//
-	// Write our output, formatted or not, to our file.
-	//
-	ioutil.WriteFile(ConfigOptions.Output, output, 0644)
-
-	//
-	// All done.
-	//
+	Implant()
 }

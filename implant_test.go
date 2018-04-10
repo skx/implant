@@ -154,7 +154,7 @@ func TestFileFinding(t *testing.T) {
 	//
 	// Find our files.
 	//
-	out, err := findFiles(ConfigOptions.Input)
+	out, err := findFiles()
 	if err != nil {
 		t.Errorf("Error finding files!")
 	}
@@ -202,7 +202,7 @@ func TestOutputTemplate(t *testing.T) {
 	//
 	// Find our files.
 	//
-	out, err := findFiles(ConfigOptions.Input)
+	out, err := findFiles()
 	if err != nil {
 		t.Errorf("Error finding files!")
 	}
@@ -309,4 +309,63 @@ func TestFilter(t *testing.T) {
 	if !strings.Contains(str, "package main\n") {
 		t.Errorf("Our filtering didn't work?")
 	}
+}
+
+//
+// Test invoking our driver
+//
+func TestInvoke(t *testing.T) {
+
+	//
+	// Create a temporary directory
+	//
+	p, err := ioutil.TempDir(os.TempDir(), "prefix")
+	if err != nil {
+		t.Errorf("Error setting up test.")
+	}
+
+	//
+	// Setup our options.
+	//
+	ConfigOptions.Input = p
+	ConfigOptions.Output = filepath.Join(p, "out.go")
+	ConfigOptions.Verbose = true
+	ConfigOptions.Format = true
+
+	//
+	// Create an input-file
+	//
+	txt := []byte("hello, world!\n")
+	err = ioutil.WriteFile(filepath.Join(p, "bar"), txt, 0644)
+	if err != nil {
+		t.Errorf("Failed to write our data to a file")
+	}
+
+	//
+	// Run the driver
+	//
+	Implant()
+
+	//
+	// Test that it produced some output we expect
+	//
+	output, err := ioutil.ReadFile(ConfigOptions.Output)
+	if !strings.Contains(string(output), "bar") {
+		t.Errorf("Rendered template didn't contain 'bar'")
+	}
+
+	//
+	// Remove the input file, so that we get an error
+	//
+	os.Remove(filepath.Join(p, "bar"))
+	os.Remove(ConfigOptions.Output)
+
+	//
+	// Test again
+	Implant()
+
+	// Cleanup our temporary directory
+	//
+	os.RemoveAll(ConfigOptions.Input)
+
 }
