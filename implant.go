@@ -58,6 +58,31 @@ type Resource struct {
 }
 
 //
+// CheckInputLocation is designed to test that the input path
+// specified is a directory.
+//
+// If this function returns false then the application terminates.
+//
+func CheckInput() bool {
+
+	stat, err := os.Stat(ConfigOptions.Input)
+	if err != nil {
+		fmt.Printf("Failed to stat %s - Did you forget to specify a directory to read?\n", ConfigOptions.Input)
+		return false
+	}
+
+	//
+	// Test that the input path is a directory.
+	//
+	if !stat.IsDir() {
+		fmt.Printf("Error %s is not a directory!\n", ConfigOptions.Input)
+		return false
+	}
+
+	return true
+}
+
+//
 // ShouldInclude is invoked by our filesystem-walker, and determines whether
 // any particular directory entry beneath the input tree should be included
 // in our generated `static.go` file.
@@ -270,19 +295,10 @@ func main() {
 	}
 
 	//
-	// Test that the input path exists
+	// Check we've been given an input path that a) exists and b) is
+	// a directory.
 	//
-	stat, err := os.Stat(ConfigOptions.Input)
-	if err != nil {
-		fmt.Printf("Failed to stat %s - Did you forget to specify a directory to read?\n", ConfigOptions.Input)
-		os.Exit(1)
-	}
-
-	//
-	// Test that the input path is a directory.
-	//
-	if !stat.IsDir() {
-		fmt.Printf("Error %s is not a directory!\n", ConfigOptions.Input)
+	if !CheckInput() {
 		os.Exit(1)
 	}
 

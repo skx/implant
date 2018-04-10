@@ -232,3 +232,57 @@ func TestOutputTemplate(t *testing.T) {
 	os.RemoveAll(ConfigOptions.Input)
 
 }
+
+//
+// Test we can sanity-check our input path.
+//
+func TestInputDirectory(t *testing.T) {
+
+	//
+	// Create a temporary directory
+	//
+	p, err := ioutil.TempDir(os.TempDir(), "prefix")
+	if err != nil {
+		t.Errorf("Error setting up test.")
+	}
+
+	//
+	// Setup our options.
+	//
+	ConfigOptions.Input = p
+
+	//
+	// Test a directory
+	//
+	if !CheckInput() {
+		t.Errorf("A valid directory wasn't accepted.")
+	}
+
+	//
+	// Test a missing thing
+	//
+	ConfigOptions.Input = filepath.Join(p, "missing.ent")
+	if CheckInput() {
+		t.Errorf("A missing file was accepted.")
+	}
+
+	//
+	// Test a file, rather than a directory
+	//
+	txt := []byte("hello, world!\n")
+	err = ioutil.WriteFile(filepath.Join(p, "bar"), txt, 0644)
+	if err != nil {
+		t.Errorf("Failed to write our data to a file")
+	}
+
+	ConfigOptions.Input = filepath.Join(p, "bar")
+	if CheckInput() {
+		t.Errorf("A missing file was accepted.")
+	}
+
+	//
+	// Cleanup our temporary directory
+	//
+	os.RemoveAll(ConfigOptions.Input)
+
+}
