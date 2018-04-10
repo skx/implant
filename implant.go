@@ -83,6 +83,23 @@ func CheckInput() bool {
 }
 
 //
+// PipeCommand pipes some data through a binary, and returns the output.
+//
+func PipeCommand(cmd string, input []byte) []byte {
+
+	fmtCmd := exec.Command("gofmt")
+	In, _ := fmtCmd.StdinPipe()
+	Out, _ := fmtCmd.StdoutPipe()
+	fmtCmd.Start()
+	In.Write(input)
+	In.Close()
+	output, _ := ioutil.ReadAll(Out)
+	fmtCmd.Wait()
+
+	return output
+}
+
+//
 // ShouldInclude is invoked by our filesystem-walker, and determines whether
 // any particular directory entry beneath the input tree should be included
 // in our generated `static.go` file.
@@ -338,27 +355,27 @@ func main() {
 	}
 
 	//
-	// Now we pipe our generated template through `gofmt`
+	// This is the output of the template
+	//
+	output := []byte(tmpl)
+
+	//
+	// Optionally we pipe our generated output through `gofmt`
 	//
 	if ConfigOptions.Format {
 		if ConfigOptions.Verbose {
 			fmt.Printf("Piping our output through `gofmt` and into %s\n", ConfigOptions.Output)
 		}
 
-		fmtCmd := exec.Command("gofmt")
-		In, _ := fmtCmd.StdinPipe()
-		Out, _ := fmtCmd.StdoutPipe()
-		fmtCmd.Start()
-		In.Write([]byte(tmpl))
-		In.Close()
-		Bytes, _ := ioutil.ReadAll(Out)
-		fmtCmd.Wait()
-		ioutil.WriteFile(ConfigOptions.Output, Bytes, 0644)
-	} else {
-		if ConfigOptions.Verbose {
-			fmt.Printf("Writing output to %s\n", ConfigOptions.Output)
-		}
-		ioutil.WriteFile(ConfigOptions.Output, []byte(tmpl), 0644)
+		output = PipeCommand("gofmt", []byte(tmpl))
 	}
 
+	//
+	// Write our output, formatted or not, to our file.
+	//
+	ioutil.WriteFile(ConfigOptions.Output, output, 0644)
+
+	//
+	// All done.
+	//
 }
