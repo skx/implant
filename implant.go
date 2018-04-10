@@ -15,7 +15,6 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -56,17 +55,6 @@ type Resource struct {
 	Filename string
 	Contents string
 	Length   int
-}
-
-//
-// Write gzipped data to a Writer
-//
-func gzipWrite(w io.Writer, data []byte) error {
-	// Write gzipped data to the client
-	gw, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
-	defer gw.Close()
-	gw.Write(data)
-	return err
 }
 
 //
@@ -176,10 +164,15 @@ func findFiles(input string) ([]Resource, error) {
 		// gzip the data.
 		//
 		var gzipped bytes.Buffer
-		err = gzipWrite(&gzipped, data)
+		gw, err := gzip.NewWriterLevel(&gzipped, gzip.BestSpeed)
 		if err != nil {
 			return nil, err
 		}
+		_, err = gw.Write(data)
+		if err != nil {
+			return nil, err
+		}
+		gw.Close()
 
 		//
 		// Add the filename + data, which is now encoded
