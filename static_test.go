@@ -1,7 +1,7 @@
 //
 // Simple testing of our embedded resource.
 //
-//
+
 package main
 
 import (
@@ -21,45 +21,58 @@ func TestResourceCount(t *testing.T) {
 }
 
 //
-// Test that our resource is identical to our static-file.
+// Test that each of our resources is identical to the master
+// version.
 //
 func TestResourceMatches(t *testing.T) {
 
 	//
-	// Get the data from our embedded copy
+	// For each resource
 	//
-	data, err := getResource("data/static.tmpl")
-	if err != nil {
-		t.Errorf("Loading our resource failed.")
-	}
+	all := getResources()
 
-	//
-	// Get the data from our master-copy.
-	//
-	master, err := ioutil.ReadFile("data/static.tmpl")
-	if err != nil {
-		t.Errorf("Loading our master-resource failed.")
-	}
+	for _, entry := range all {
 
-	//
-	// Test the lengths match
-	//
-	if len(master) != len(data) {
-		t.Errorf("Embedded and real resources have different sizes.")
-	}
+		//
+		// Get the data from our embedded copy
+		//
+		data, err := getResource(entry.Filename)
+		if err != nil {
+			t.Errorf("Loading our resource failed:%s", entry.Filename)
+		}
 
-	//
-	// Now test the length is the same as generated in the file.
-	//
-	if len(master) != getResources()[0].Length {
-		t.Errorf("Data length didn't match the generated size")
-	}
+		//
+		// Get the data from our master-copy.
+		//
+		master, err := ioutil.ReadFile(entry.Filename)
+		if err != nil {
+			t.Errorf("Loading our master-resource failed:%s", entry.Filename)
+		}
 
-	//
-	// Test the data-matches
-	//
-	if string(master) != string(data) {
-		t.Errorf("Embedded and real resources have different content.")
+		//
+		// Test the lengths match
+		//
+		if len(master) != len(data) {
+			t.Errorf("Embedded and real resources have different sizes.")
+		}
+
+		//
+		// Now test the length is the same as generated in the file.
+		//
+		for i, o := range all {
+			if o.Filename == entry.Filename {
+				if len(master) != getResources()[i].Length {
+					t.Errorf("Data length didn't match the generated size")
+				}
+			}
+		}
+
+		//
+		// Test the data-matches
+		//
+		if string(master) != string(data) {
+			t.Errorf("Embedded and real resources have different content.")
+		}
 	}
 }
 
