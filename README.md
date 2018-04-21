@@ -31,7 +31,7 @@ you can download, or update, your local copy of the application via:
      $ go get -u  github.com/skx/implant
      $ go install github.com/skx/implant
 
-This is equivilent to cloning our repository and building via:
+This is equivalent to cloning our repository and building via:
 
       $ go get .
       $ go build .
@@ -81,8 +81,8 @@ the compression is effectively wasted, but it is a reasonable trade-off.
 
 ## Users
 
-The application uses itself, to embed the template file which is written
-to `static.go`.  In addition to that severla of my small applications use
+The application uses itself to embed the template file which is written
+to `static.go`.  In addition to that several of my small applications use
 this library, for example:
 
 * https://github.com/skx/dns-api-go
