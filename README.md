@@ -28,7 +28,8 @@ can list available files, and extract the contents of specific ones.
 If you're already setup for fetching & building golang applications
 you can download, or update, your local copy of the application via:
 
-     $ go get github.com/skx/implant
+     $ go get -u  github.com/skx/implant
+     $ go install github.com/skx/implant
 
 This is equivilent to cloning our repository and building via:
 
