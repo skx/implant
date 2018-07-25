@@ -58,7 +58,7 @@ type Resource struct {
 }
 
 //
-// CheckInputLocation is designed to test that the input path
+// CheckInput is designed to test that the input path
 // specified is a directory.
 //
 // If this function returns false then the application terminates.
@@ -276,7 +276,7 @@ func renderTemplate(entries []Resource) (string, error) {
 }
 
 //
-// This is our main driver
+// Implant is our main driver
 //
 func Implant() {
 	//
