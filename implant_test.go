@@ -150,6 +150,9 @@ func TestFileFinding(t *testing.T) {
 	//
 	txt := []byte("hello, world!\n")
 	err = ioutil.WriteFile(filepath.Join(p, "bar"), txt, 0644)
+	if err != nil {
+		t.Errorf("Error writing data to the file")
+	}
 
 	//
 	// Find our files.
@@ -198,6 +201,9 @@ func TestOutputTemplate(t *testing.T) {
 	//
 	txt := []byte("hello, world!\n")
 	err = ioutil.WriteFile(filepath.Join(p, "input"), txt, 0644)
+	if err != nil {
+		t.Errorf("Error writing file!")
+	}
 
 	//
 	// Find our files.
@@ -350,6 +356,10 @@ func TestInvoke(t *testing.T) {
 	// Test that it produced some output we expect
 	//
 	output, err := ioutil.ReadFile(ConfigOptions.Output)
+	if err != nil {
+		t.Errorf("Error reading file")
+	}
+
 	if !strings.Contains(string(output), "bar") {
 		t.Errorf("Rendered template didn't contain 'bar'")
 	}
