@@ -20,22 +20,51 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"text/template"
 )
 
-//
+// Created so that multiple inputs can be accecpted
+type inputFlags []string
+
+// Convert our input-flags to a string
+func (i *inputFlags) String() string {
+	return strings.Join(*i, ",")
+}
+
+// Set adds an -input-flag to our list of directories to scan.
+func (i *inputFlags) Set(value string) error {
+	*i = append(*i, strings.TrimSpace(value))
+	return nil
+}
+
 // ConfigOptions is the globally visible structure which is designed to
 // hold our configuration-options - as set by the command-line flags.
 //
 // It is perhaps poor practice to do things this way, but it eases coding.
-//
 var ConfigOptions struct {
-	Input   string
-	Output  string
+	// Input contains the directories we should search for files to include
+	Input inputFlags
+
+	// Output is used to hold the name of the file we generate.
+	Output string
+
+	// Exclude contains a regular expression of files to exclude from
+	// the implantation process
 	Exclude string
+
+	// Package contains the package to which the generated file should be
+	// a member of.  (By default `main`.)
 	Package string
-	Format  bool
+
+	// Format controls whether we format the generated file with `go fmt`
+	Format bool
+
+	// Verbose is set to increase verbosity.
 	Verbose bool
+
+	// Version is used to determine whether we should just report our
+	// version-number then terminate.
 	Version bool
 }
 
@@ -46,28 +75,30 @@ var (
 	version = "master/latest"
 )
 
-//
 // Resource is the structure used to temporarily hold data about all the
 // static-resources we've discovered and will write out to the generated
 // `static.go` file.
-//
 type Resource struct {
+
+	// Filename holds the filename of the resource we've discovered.
 	Filename string
+
+	// Contents holds the string contents of the file.
 	Contents string
-	Length   int
+
+	// Length contains the length of the input file.
+	Length int
 }
 
-//
 // CheckInput is designed to test that the input path
 // specified is a directory.
 //
 // If this function returns false then the application terminates.
-//
-func CheckInput() bool {
+func CheckInput(directory string) bool {
 
-	stat, err := os.Stat(ConfigOptions.Input)
+	stat, err := os.Stat(directory)
 	if err != nil {
-		fmt.Printf("Failed to stat %s - Did you forget to specify a directory to read?\n", ConfigOptions.Input)
+		fmt.Printf("Failed to stat %s - Does it exist?\n", directory)
 		return false
 	}
 
@@ -75,7 +106,7 @@ func CheckInput() bool {
 	// Test that the input path is a directory.
 	//
 	if !stat.IsDir() {
-		fmt.Printf("Error %s is not a directory!\n", ConfigOptions.Input)
+		fmt.Printf("Error %s is not a directory!\n", directory)
 		return false
 	}
 
@@ -99,14 +130,12 @@ func PipeCommand(cmd string, input []byte) []byte {
 	return output
 }
 
-//
 // ShouldInclude is invoked by our filesystem-walker, and determines whether
-// any particular directory entry beneath the input tree should be included
+// any particular directory-entry beneath the input tree should be included
 // in our generated `static.go` file.
 //
 // We skip directories, and we might skip particular entries via a user-supplied
 // regular expression too.
-//
 func ShouldInclude(path string) bool {
 
 	//
@@ -152,11 +181,9 @@ func ShouldInclude(path string) bool {
 	return true
 }
 
-//
-// Find all the files in the given directory, returning an array
-// of structures.
-//
-func findFiles() ([]Resource, error) {
+// findFiles finds all the files in the given directory, returning an array
+// of Resource-structures to describe each one.
+func findFiles(directory string) ([]Resource, error) {
 
 	// The resources we've found.
 	var entries []Resource
@@ -165,18 +192,18 @@ func findFiles() ([]Resource, error) {
 	fileList := []string{}
 
 	// Recursively look for files to add.
-	err := filepath.Walk(ConfigOptions.Input, func(path string, f os.FileInfo, err error) error {
+	err := filepath.Walk(directory, func(path string, f os.FileInfo, err error) error {
 		if ConfigOptions.Verbose {
 			fmt.Printf("Found file: %s\n", path)
 		}
 		if ShouldInclude(path) {
 			if ConfigOptions.Verbose {
-				fmt.Printf("Including file: %s\n", path)
+				fmt.Printf("\tIncluding file: %s\n", path)
 			}
 			fileList = append(fileList, path)
 		} else {
 			if ConfigOptions.Verbose {
-				fmt.Printf("Excluding file: %s\n", path)
+				fmt.Printf("\tExcluding file: %s\n", path)
 			}
 
 		}
@@ -228,103 +255,119 @@ func findFiles() ([]Resource, error) {
 	return entries, nil
 }
 
-//
-// Given the array of resource-entries render our template.
-//
+// renderTemplate populates our template-file with the list of resources
+// which have been discovered.
 func renderTemplate(entries []Resource) (string, error) {
 
 	//
-	// Create our template object
+	// Get our template-text.
 	//
 	tmpl, err := getResource("data/static.tmpl")
 	if err != nil {
 		return "", err
 	}
 
+	//
+	// Compile it.
+	//
 	t := template.Must(template.New("tmpl").Parse(string(tmpl)))
 
 	//
-	// The data we add to our template.
+	// Populate the template-data
 	//
 	var Templatedata struct {
 		Resources []Resource
 		Package   string
 	}
-
-	//
-	// Populate the template-data
-	//
 	Templatedata.Package = ConfigOptions.Package
 	Templatedata.Resources = entries
 
 	//
-	// Execute into a temporary buffer.
+	// Execute the template into a temporary buffer.
 	//
 	buf := &bytes.Buffer{}
 	err = t.Execute(buf, Templatedata)
 
 	//
-	// If there were errors, then show them.
+	// If there was an error return it.
 	if err != nil {
 		return "", err
 	}
 
 	//
-	// Otherwise write the result.
+	// Otherwise return the result of the template-compilation.
 	//
 	return buf.String(), nil
 }
 
-//
-// Implant is our main driver
-//
+// Implant is our main entry-point.
 func Implant() {
-	//
-	// If we're running verbosely show our settings.
-	//
-	if ConfigOptions.Verbose {
-		fmt.Printf("Reading input directory %s\n", ConfigOptions.Input)
-	}
 
 	//
-	// Check we've been given an input path that a) exists and b) is
-	// a directory.
+	// We'll build up a list of resources which will be
+	// inserted into our template.
 	//
-	if !CheckInput() {
-		os.Exit(1)
-	}
+	var resources []Resource
 
 	//
-	// Now find the files beneath that path.
+	// Process each directory which was specified.
 	//
-	files, err := findFiles()
-	if err != nil {
-		fmt.Printf("Error processing files: %s\n", err.Error())
-		return
-	}
+	for _, directory := range ConfigOptions.Input {
 
-	//
-	// If there were no files found we should abort.
-	//
-	if len(files) < 1 {
-		fmt.Printf("Failed to find files beneath %s\n", ConfigOptions.Input)
-		return
+		//
+		// If we're running verbosely show our settings.
+		//
+		if ConfigOptions.Verbose {
+			fmt.Printf("Reading input directory %s\n", directory)
+		}
+
+		//
+		// Check we've been given an input path that a) exists and b) is
+		// a directory.
+		//
+		if !CheckInput(directory) {
+			os.Exit(1)
+		}
+
+		//
+		// Now find the files beneath that path.
+		//
+		files, err := findFiles(directory)
+		if err != nil {
+			fmt.Printf("Error processing files: %s\n", err.Error())
+			return
+		}
+
+		//
+		// Append the files to our result-set
+		//
+		for _, entry := range files {
+			resources = append(resources, entry)
+		}
+
+		//
+		// If a given directory resulted in no input then report that.
+		//
+		if len(files) < 1 {
+			fmt.Printf("Failed to find files beneath %s\n", directory)
+			break
+		}
 	}
 
 	//
 	// Show how many files we found.
 	//
 	if ConfigOptions.Verbose {
-		fmt.Printf("Populating static.go with the following files.\n")
-		for _, ent := range files {
+		fmt.Printf("Populating %s with the following files:\n", ConfigOptions.Output)
+		for _, ent := range resources {
 			fmt.Printf("\t%s\n", ent.Filename)
 		}
 	}
 
 	//
-	// Render our template with their details
+	// Now render our template with their details
 	//
-	tmpl, err := renderTemplate(files)
+	tmpl, err := renderTemplate(resources)
 	if err != nil {
 		fmt.Printf("Failed to render template %s\n", err.Error())
 		return
@@ -352,16 +395,14 @@ func Implant() {
 	ioutil.WriteFile(ConfigOptions.Output, output, 0644)
 }
 
-//
-// This is our entry-point.
-//
+// main is our entry-point.
 func main() {
 
 	//
 	// The command-line flags we support
 	//
 	flag.StringVar(&ConfigOptions.Exclude, "exclude", "", "A regular expression of files to ignore, for example '.git'.")
-	flag.StringVar(&ConfigOptions.Input, "input", "data/", "The directory to read from.")
+	flag.Var(&ConfigOptions.Input, "input", "The directory to read from.")
 	flag.StringVar(&ConfigOptions.Output, "output", "static.go", "The output file to generate.")
 	flag.StringVar(&ConfigOptions.Package, "package", "main", "The (go) package that the generated file is part of.")
 	flag.BoolVar(&ConfigOptions.Verbose, "verbose", false, "Should we be verbose.")
@@ -374,6 +415,14 @@ func main() {
 	flag.Parse()
 
 	//
+	// If we received no input-directory/input-directories then we
+	// should default to processing the contents of ./data
+	//
+	if len(ConfigOptions.Input) == 0 {
+		ConfigOptions.Input = append(ConfigOptions.Input, "./data")
+	}
+
+	//
 	// Showing our version?
 	//
 	if ConfigOptions.Version {
@@ -381,5 +430,8 @@ func main() {
 		os.Exit(0)
 	}
 
+	//
+	// Otherwise process the directories.
+	//
 	Implant()
 }

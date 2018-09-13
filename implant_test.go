@@ -28,7 +28,7 @@ func TestSimpleExclusions(t *testing.T) {
 	//
 	// Setup our options.
 	//
-	ConfigOptions.Input = p
+	ConfigOptions.Input = append(ConfigOptions.Input, p)
 	ConfigOptions.Verbose = true
 
 	//
@@ -58,8 +58,9 @@ func TestSimpleExclusions(t *testing.T) {
 
 	// Cleanup our temporary directory
 	//
-	os.RemoveAll(ConfigOptions.Input)
-
+	for _, path := range ConfigOptions.Input {
+		os.RemoveAll(path)
+	}
 }
 
 //
@@ -78,7 +79,7 @@ func TestRegexpExclusions(t *testing.T) {
 	//
 	// Setup our options.
 	//
-	ConfigOptions.Input = p
+	ConfigOptions.Input = append(ConfigOptions.Input, p)
 	ConfigOptions.Verbose = true
 	ConfigOptions.Exclude = "/.git"
 
@@ -122,7 +123,9 @@ func TestRegexpExclusions(t *testing.T) {
 	//
 	// Cleanup our temporary directory
 	//
-	os.RemoveAll(ConfigOptions.Input)
+	for _, path := range ConfigOptions.Input {
+		os.RemoveAll(path)
+	}
 
 }
 
@@ -142,7 +145,7 @@ func TestFileFinding(t *testing.T) {
 	//
 	// Setup our options.
 	//
-	ConfigOptions.Input = p
+	ConfigOptions.Input = append(ConfigOptions.Input, p)
 	ConfigOptions.Verbose = true
 
 	//
@@ -157,7 +160,7 @@ func TestFileFinding(t *testing.T) {
 	//
 	// Find our files.
 	//
-	out, err := findFiles()
+	out, err := findFiles(p)
 	if err != nil {
 		t.Errorf("Error finding files!")
 	}
@@ -172,8 +175,9 @@ func TestFileFinding(t *testing.T) {
 	//
 	// Cleanup our temporary directory
 	//
-	os.RemoveAll(ConfigOptions.Input)
-
+	for _, path := range ConfigOptions.Input {
+		os.RemoveAll(path)
+	}
 }
 
 //
@@ -192,7 +196,7 @@ func TestOutputTemplate(t *testing.T) {
 	//
 	// Setup our options.
 	//
-	ConfigOptions.Input = p
+	ConfigOptions.Input = append(ConfigOptions.Input, p)
 	ConfigOptions.Verbose = true
 	ConfigOptions.Package = "main"
 
@@ -208,7 +212,7 @@ func TestOutputTemplate(t *testing.T) {
 	//
 	// Find our files.
 	//
-	out, err := findFiles()
+	out, err := findFiles(p)
 	if err != nil {
 		t.Errorf("Error finding files!")
 	}
@@ -235,7 +239,9 @@ func TestOutputTemplate(t *testing.T) {
 	//
 	// Cleanup our temporary directory
 	//
-	os.RemoveAll(ConfigOptions.Input)
+	for _, path := range ConfigOptions.Input {
+		os.RemoveAll(path)
+	}
 
 }
 
@@ -255,20 +261,20 @@ func TestInputDirectory(t *testing.T) {
 	//
 	// Setup our options.
 	//
-	ConfigOptions.Input = p
+	ConfigOptions.Input = append(ConfigOptions.Input, p)
 
 	//
 	// Test a directory
 	//
-	if !CheckInput() {
+	if !CheckInput(p) {
 		t.Errorf("A valid directory wasn't accepted.")
 	}
 
 	//
 	// Test a missing thing
 	//
-	ConfigOptions.Input = filepath.Join(p, "missing.ent")
-	if CheckInput() {
+	ConfigOptions.Input = append(ConfigOptions.Input, filepath.Join(p, "missing.ent"))
+	if CheckInput(ConfigOptions.Input[len(ConfigOptions.Input)-1]) {
 		t.Errorf("A missing file was accepted.")
 	}
 
@@ -281,16 +287,17 @@ func TestInputDirectory(t *testing.T) {
 		t.Errorf("Failed to write our data to a file")
 	}
 
-	ConfigOptions.Input = filepath.Join(p, "bar")
-	if CheckInput() {
+	ConfigOptions.Input = append(ConfigOptions.Input, filepath.Join(p, "bar"))
+	if CheckInput(ConfigOptions.Input[len(ConfigOptions.Input)-1]) {
 		t.Errorf("A missing file was accepted.")
 	}
 
 	//
 	// Cleanup our temporary directory
 	//
-	os.RemoveAll(ConfigOptions.Input)
-
+	for _, path := range ConfigOptions.Input {
+		os.RemoveAll(path)
+	}
 }
 
 //
@@ -333,10 +340,12 @@ func TestInvoke(t *testing.T) {
 	//
 	// Setup our options.
 	//
-	ConfigOptions.Input = p
+	ConfigOptions.Input = nil
+	ConfigOptions.Input = append(ConfigOptions.Input, p)
 	ConfigOptions.Output = filepath.Join(p, "out.go")
 	ConfigOptions.Verbose = true
 	ConfigOptions.Format = true
+	ConfigOptions.Package = "main"
 
 	//
 	// Create an input-file
@@ -370,12 +379,10 @@ func TestInvoke(t *testing.T) {
 	os.Remove(filepath.Join(p, "bar"))
 	os.Remove(ConfigOptions.Output)
 
-	//
-	// Test again
-	Implant()
-
 	// Cleanup our temporary directory
 	//
-	os.RemoveAll(ConfigOptions.Input)
+	for _, path := range ConfigOptions.Input {
+		os.RemoveAll(path)
+	}
 
 }
