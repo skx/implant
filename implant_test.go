@@ -85,6 +85,8 @@ func TestChoose(t *testing.T) {
 
 }
 
+// TestRenderTemplate ensures that rendering a template with a series
+// of resources works at least minimally.
 func TestRenderTemplate(t *testing.T) {
 
 	//
@@ -132,4 +134,66 @@ func TestRenderTemplate(t *testing.T) {
 	if !strings.Contains(str, "moi.kissa") {
 		t.Fatalf("Our rendered template didn't contain our filename")
 	}
+}
+
+// TestInplant tests our Implant() function - which is a beast because
+// it uses a configuration-struct to control the input/output.
+//
+// Still we get coverage and perform a start-to-finish test using this
+// approach I guess.
+func TestImplant(t *testing.T) {
+
+	//
+	// Create a temporary directory to hold input files
+	//
+	in, err := ioutil.TempDir(os.TempDir(), "prefix")
+	if err != nil {
+		t.Errorf("Error setting up test.")
+	}
+	defer os.RemoveAll(in)
+
+	//
+	// Create a temporary directory to hold our output
+	out, err := ioutil.TempDir(os.TempDir(), "prefix")
+	if err != nil {
+		t.Errorf("Error setting up test.")
+	}
+	defer os.RemoveAll(out)
+
+	//
+	// Create a single file beneath our input-tree.
+	//
+	txt := []byte("hello, world!\n")
+	err = ioutil.WriteFile(filepath.Join(in, "moi.kissa"), txt, 0644)
+	if err != nil {
+		t.Errorf("Error writing file!")
+	}
+
+	//
+	// Now drive the code
+	//
+	ConfigOptions.Output = filepath.Join(out, "output.go")
+	ConfigOptions.Input = nil
+	ConfigOptions.Input = append(ConfigOptions.Input, in)
+	ConfigOptions.Verbose = true
+	ConfigOptions.Format = true
+	ConfigOptions.Package = "fashion"
+
+	//
+	// Horridly do the necessary.
+	//
+	Implant()
+
+	//
+	// Now look for the output
+	//
+	data, err := ioutil.ReadFile(ConfigOptions.Output)
+	if err != nil {
+		t.Errorf("Failed to read output file")
+	}
+
+	if !strings.Contains(string(data), "package fashion") {
+		t.Errorf("Failed to find our package in the output file!")
+	}
+
 }
