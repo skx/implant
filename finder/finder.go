@@ -1,4 +1,4 @@
-// finder is a package for finding resources.
+// Package finder is a package for finding resources.
 package finder
 
 import (
@@ -67,7 +67,7 @@ func (f *Finder) ShouldInclude(path string) bool {
 	return true
 }
 
-// findFiles finds all the files in the given directory, returning an array
+// FindFiles finds all the files in the given directory, returning an array
 // of Resource-structures to describe each one.
 func (f *Finder) FindFiles(directory string) ([]Resource, error) {
 

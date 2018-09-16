@@ -86,8 +86,11 @@ func Choose(ss []finder.Resource, test func(finder.Resource) bool) (ret []finder
 	return
 }
 
-// TestExclude tests whether the specified resource should be excluded,
+// TestRegexp tests whether the specified resource should be excluded,
 // based on the regular expression a user might have optional specified.
+//
+// If the function returns true the resource is included in our generated
+// output, when false it is not.
 func TestRegexp(x finder.Resource) bool {
 
 	if ConfigOptions.Exclude == "" {
