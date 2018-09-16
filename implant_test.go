@@ -53,8 +53,8 @@ func TestChoose(t *testing.T) {
 	// Now test a real regexp against these inputs:
 	//
 	in := []finder.Resource{
-		finder.Resource{Filename: "def", Contents: "Steve", Length: 5},
-		finder.Resource{Filename: "abc", Contents: "Kemp", Length: 4}}
+		{Filename: "def", Contents: "Steve", Length: 5},
+		{Filename: "abc", Contents: "Kemp", Length: 4}}
 
 	//
 	// Setup a regexp which will exclude no files.
