@@ -5,6 +5,9 @@
 package main
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -80,4 +83,53 @@ func TestChoose(t *testing.T) {
 		t.Errorf("Expected one entry to be filtered, found:%d", len(out))
 	}
 
+}
+
+func TestRenderTemplate(t *testing.T) {
+
+	//
+	// Create a temporary directory
+	//
+	p, err := ioutil.TempDir(os.TempDir(), "prefix")
+	if err != nil {
+		t.Errorf("Error setting up test.")
+	}
+	defer os.RemoveAll(p)
+
+	//
+	// Create a single file.
+	//
+	txt := []byte("hello, world!\n")
+	err = ioutil.WriteFile(filepath.Join(p, "moi.kissa"), txt, 0644)
+	if err != nil {
+		t.Errorf("Error writing file!")
+	}
+
+	//
+	// Create our finder
+	//
+	finder := finder.New()
+
+	//
+	// Find our files
+	//
+	resources, err := finder.FindFiles(p)
+	if err != nil {
+		t.Fatalf("We shouldn't have an error")
+	}
+
+	if len(resources) != 1 {
+		t.Fatalf("We expected to find 1 file, but found %d", len(resources))
+	}
+
+	//
+	// Now render a template.
+	//
+	str, err := RenderTemplate(resources)
+	if err != nil {
+		t.Fatalf("Found error rendering our template")
+	}
+	if !strings.Contains(str, "moi.kissa") {
+		t.Fatalf("Our rendered template didn't contain our filename")
+	}
 }

@@ -71,15 +71,9 @@ func RenderTemplate(entries []finder.Resource) (string, error) {
 	err = t.Execute(buf, Templatedata)
 
 	//
-	// If there was an error return it.
-	if err != nil {
-		return "", err
-	}
-
+	// Return the buffer contents and/or the error.
 	//
-	// Otherwise return the result of the template-compilation.
-	//
-	return buf.String(), nil
+	return buf.String(), err
 }
 
 // Choose lets us perform a test against each member of an array.
