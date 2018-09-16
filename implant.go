@@ -37,9 +37,9 @@ func PipeCommand(cmd string, input []byte) []byte {
 	return output
 }
 
-// renderTemplate populates our template-file with the list of resources
+// RenderTemplate populates our template-file with the list of resources
 // which have been discovered.
-func renderTemplate(entries []finder.Resource) (string, error) {
+func RenderTemplate(entries []finder.Resource) (string, error) {
 
 	//
 	// Get our template-text.
@@ -82,14 +82,35 @@ func renderTemplate(entries []finder.Resource) (string, error) {
 	return buf.String(), nil
 }
 
+// Choose lets us perform a test against each member of an array.
+func Choose(ss []finder.Resource, test func(finder.Resource) bool) (ret []finder.Resource) {
+	for _, s := range ss {
+		if test(s) {
+			ret = append(ret, s)
+		}
+	}
+	return
+}
+
+// TestExclude tests whether the specified resource should be excluded,
+// based on the regular expression a user might have optional specified.
+func TestRegexp(x finder.Resource) bool {
+
+	if ConfigOptions.Exclude == "" {
+		return true
+	}
+
+	match, _ := regexp.MatchString(ConfigOptions.Exclude, x.Filename)
+	return !match
+}
+
 // Implant is our main entry-point.
 func Implant() {
 
 	//
-	// We'll build up a list of resources which will be
-	// inserted into our template.
+	// We'll build up a list of all resources which were found.
 	//
-	var resources []finder.Resource
+	var all []finder.Resource
 
 	//
 	// Process each directory which was specified.
@@ -97,7 +118,7 @@ func Implant() {
 	for _, directory := range ConfigOptions.Input {
 
 		if ConfigOptions.Verbose {
-			fmt.Printf("Reading input directory %s\n", directory)
+			fmt.Printf("Processing directory %s\n", directory)
 		}
 
 		//
@@ -112,44 +133,25 @@ func Implant() {
 		}
 
 		//
-		// If we have a regular expression then test against it.
+		// Append each found-resource to the list.
 		//
-		if ConfigOptions.Exclude != "" {
-
-			//
-			// If the regexp matches then we must EXCLUDE
-			// the file.
-			//
-			for _, entry := range entries {
-				match, _ := regexp.MatchString(ConfigOptions.Exclude, entry.Filename)
-				if !match {
-					resources = append(resources, entry)
-				}
-			}
-		} else {
-
-			for _, entry := range entries {
-				resources = append(resources, entry)
-			}
+		for _, entry := range entries {
+			all = append(all, entry)
 		}
 	}
 
 	//
-	// Show how many files we found.
+	// Now exclude the resources we don't care about, because the
+	// entries match the regular expression the user specified.
 	//
-	if ConfigOptions.Verbose {
-		fmt.Printf("Populating %s with the following files:\n", ConfigOptions.Output)
-		for _, ent := range resources {
-			fmt.Printf("\t%s\n", ent.Filename)
-		}
-	}
+	resources := Choose(all, TestRegexp)
 
 	//
-	// Now render our template with their details
+	// Now render our template with the found-resources.
 	//
-	tmpl, err := renderTemplate(resources)
+	tmpl, err := RenderTemplate(resources)
 	if err != nil {
-		fmt.Printf("Failed to render template %s\n", err.Error())
+		fmt.Printf("Failed to render template: %s\n", err.Error())
 		return
 	}
 
