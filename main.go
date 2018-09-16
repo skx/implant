@@ -67,28 +67,36 @@ var ConfigOptions struct {
 	Version bool
 }
 
-// main is our entry-point.
-func main() {
+// parseArguments parses our arguments, via the flag-package
+func parseArguments() {
 
-	//
-	// The command-line flags we support
-	//
+	flag.BoolVar(&ConfigOptions.Format, "format", true, "Should we pipe our template through 'gofmt'?")
+	flag.BoolVar(&ConfigOptions.Verbose, "verbose", false, "Should we be verbose.")
+	flag.BoolVar(&ConfigOptions.Version, "version", false, "Should we report our version and exit?")
 	flag.StringVar(&ConfigOptions.Exclude, "exclude", "", "A regular expression of files to ignore, for example '.git'.")
-	flag.Var(&ConfigOptions.Input, "input", "The directory to read from.")
 	flag.StringVar(&ConfigOptions.Output, "output", "static.go", "The output file to generate.")
 	flag.StringVar(&ConfigOptions.Package, "package", "main", "The (go) package that the generated file is part of.")
-	flag.BoolVar(&ConfigOptions.Verbose, "verbose", false, "Should we be verbose.")
-	flag.BoolVar(&ConfigOptions.Format, "format", true, "Should we pipe our template through 'gofmt'?")
-	flag.BoolVar(&ConfigOptions.Version, "version", false, "Should we report our version and exit?")
+	flag.Var(&ConfigOptions.Input, "input", "The directory to read from.")
 
 	//
 	// Parse the flags
 	//
 	flag.Parse()
 
+}
+
+// main is our entry-point.
+func main() {
+
+	//
+	// Parse our arguments
+	//
+	parseArguments()
+
 	//
 	// If we received no input-directory/input-directories then we
-	// should default to processing the contents of ./data
+	// should default to processing the contents of the ./data
+	// directory, which was our previous default.
 	//
 	if len(ConfigOptions.Input) == 0 {
 		ConfigOptions.Input = append(ConfigOptions.Input, "./data")
