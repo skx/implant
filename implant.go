@@ -101,7 +101,7 @@ func TestRegexp(x finder.Resource) bool {
 	}
 
 	match, _ := regexp.MatchString(ConfigOptions.Exclude, x.Filename)
-	return !match
+	return match == false
 }
 
 // Implant is our main entry-point.
