@@ -102,6 +102,9 @@ The repository contains a number of test-cases, they can can be executed via:
     ok  	github.com/skx/implant	(cached)
     ok  	github.com/skx/implant/finder	(cached)
 
+To receive coverage details:
+
+    $ go test -coverprofile=tmp.t ./... && go tool cover -html=tmp.t && rm ./tmp.t
 
 Steve
 --
