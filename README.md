@@ -94,5 +94,14 @@ You'll see in each case I've committed the generated `static.go` file to the rep
 I suggest a similar approach in your own deployments.
 
 
+## Testing
+
+The repository contains a number of test-cases, they can can be executed via:
+
+    $ go test ./...
+    ok  	github.com/skx/implant	(cached)
+    ok  	github.com/skx/implant/finder	(cached)
+
+
 Steve
 --

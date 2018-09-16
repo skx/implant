@@ -10,295 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/skx/implant/finder"
 )
-
-//
-// Test that files/directories are included/excluded as expected.
-//
-func TestSimpleExclusions(t *testing.T) {
-
-	//
-	// Create a temporary directory
-	//
-	p, err := ioutil.TempDir(os.TempDir(), "prefix")
-	if err != nil {
-		t.Errorf("Error setting up test.")
-	}
-
-	//
-	// Setup our options.
-	//
-	ConfigOptions.Input = append(ConfigOptions.Input, p)
-	ConfigOptions.Verbose = true
-
-	//
-	// Create a directory, and test it shouldn't be included.
-	//
-	os.Mkdir(filepath.Join(p, "foo"), 0777)
-	if ShouldInclude(filepath.Join(p, "foo")) {
-		t.Errorf("We shouldn't include a directory")
-	}
-
-	//
-	// This is a simple error-case.
-	//
-	ShouldInclude(filepath.Join(p, "missing.file"))
-
-	//
-	// Create a file and test it should be included
-	//
-	txt := []byte("hello, world!\n")
-	err = ioutil.WriteFile(filepath.Join(p, "bar"), txt, 0644)
-	if err != nil {
-		t.Errorf("Failed to write our data to a file")
-	}
-	if !ShouldInclude(filepath.Join(p, "bar")) {
-		t.Errorf("We should include a file")
-	}
-
-	// Cleanup our temporary directory
-	//
-	for _, path := range ConfigOptions.Input {
-		os.RemoveAll(path)
-	}
-}
-
-//
-// Test that files are excluded via regular expressions.
-//
-func TestRegexpExclusions(t *testing.T) {
-
-	//
-	// Create a temporary directory
-	//
-	p, err := ioutil.TempDir(os.TempDir(), "prefix")
-	if err != nil {
-		t.Errorf("Error setting up test.")
-	}
-
-	//
-	// Setup our options.
-	//
-	ConfigOptions.Input = append(ConfigOptions.Input, p)
-	ConfigOptions.Verbose = true
-	ConfigOptions.Exclude = "/.git"
-
-	//
-	// We'll test that each of these files should be missing.
-	//
-	type TestCase struct {
-		Filename string
-		Exclude  bool
-	}
-
-	//
-	// Now our tests
-	//
-	tests := []TestCase{
-		{"test", false},
-		{"tgit", true}, // Excluded because ".git" matches "tgit"
-		{"git", false},
-		{".git", true},
-		{".gitignore", true}}
-
-	for _, entry := range tests {
-
-		//
-		// Create a file and test it should be included
-		//
-		txt := []byte("hello, world!\n")
-		path := filepath.Join(p, entry.Filename)
-		err = ioutil.WriteFile(path, txt, 0644)
-		if err != nil {
-			t.Errorf("Failed to write our data to a file")
-		}
-
-		out := ShouldInclude(path)
-
-		if out != !entry.Exclude {
-			t.Errorf("Regexp exclusion failed for %s, got %v expected %v", entry.Filename, out, entry.Exclude)
-		}
-	}
-
-	//
-	// Cleanup our temporary directory
-	//
-	for _, path := range ConfigOptions.Input {
-		os.RemoveAll(path)
-	}
-
-}
-
-//
-// Test we can find files.
-//
-func TestFileFinding(t *testing.T) {
-
-	//
-	// Create a temporary directory
-	//
-	p, err := ioutil.TempDir(os.TempDir(), "prefix")
-	if err != nil {
-		t.Errorf("Error setting up test.")
-	}
-
-	//
-	// Setup our options.
-	//
-	ConfigOptions.Input = append(ConfigOptions.Input, p)
-	ConfigOptions.Verbose = true
-
-	//
-	// Create a single file.
-	//
-	txt := []byte("hello, world!\n")
-	err = ioutil.WriteFile(filepath.Join(p, "bar"), txt, 0644)
-	if err != nil {
-		t.Errorf("Error writing data to the file")
-	}
-
-	//
-	// Find our files.
-	//
-	out, err := findFiles(p)
-	if err != nil {
-		t.Errorf("Error finding files!")
-	}
-
-	//
-	// We should have one output result.
-	//
-	if len(out) != 1 {
-		t.Errorf("We expected to find one file!")
-	}
-
-	//
-	// Cleanup our temporary directory
-	//
-	for _, path := range ConfigOptions.Input {
-		os.RemoveAll(path)
-	}
-}
-
-//
-// Test we can output a template.
-//
-func TestOutputTemplate(t *testing.T) {
-
-	//
-	// Create a temporary directory
-	//
-	p, err := ioutil.TempDir(os.TempDir(), "prefix")
-	if err != nil {
-		t.Errorf("Error setting up test.")
-	}
-
-	//
-	// Setup our options.
-	//
-	ConfigOptions.Input = append(ConfigOptions.Input, p)
-	ConfigOptions.Verbose = true
-	ConfigOptions.Package = "main"
-
-	//
-	// Create a single file.
-	//
-	txt := []byte("hello, world!\n")
-	err = ioutil.WriteFile(filepath.Join(p, "input"), txt, 0644)
-	if err != nil {
-		t.Errorf("Error writing file!")
-	}
-
-	//
-	// Find our files.
-	//
-	out, err := findFiles(p)
-	if err != nil {
-		t.Errorf("Error finding files!")
-	}
-
-	//
-	// Render our template
-	//
-	out2, err := renderTemplate(out)
-	if err != nil {
-		t.Errorf("Error rendering template")
-	}
-
-	//
-	// Ensure that our output looks valid.
-	//
-	if len(out2) < 1 {
-		t.Errorf("Rendered template was empty")
-	}
-
-	if !strings.Contains(out2, "package main") {
-		t.Errorf("Rendered template was not in the main-package")
-	}
-
-	//
-	// Cleanup our temporary directory
-	//
-	for _, path := range ConfigOptions.Input {
-		os.RemoveAll(path)
-	}
-
-}
-
-//
-// Test we can sanity-check our input path.
-//
-func TestInputDirectory(t *testing.T) {
-
-	//
-	// Create a temporary directory
-	//
-	p, err := ioutil.TempDir(os.TempDir(), "prefix")
-	if err != nil {
-		t.Errorf("Error setting up test.")
-	}
-
-	//
-	// Setup our options.
-	//
-	ConfigOptions.Input = append(ConfigOptions.Input, p)
-
-	//
-	// Test a directory
-	//
-	if !CheckInput(p) {
-		t.Errorf("A valid directory wasn't accepted.")
-	}
-
-	//
-	// Test a missing thing
-	//
-	ConfigOptions.Input = append(ConfigOptions.Input, filepath.Join(p, "missing.ent"))
-	if CheckInput(ConfigOptions.Input[len(ConfigOptions.Input)-1]) {
-		t.Errorf("A missing file was accepted.")
-	}
-
-	//
-	// Test a file, rather than a directory
-	//
-	txt := []byte("hello, world!\n")
-	err = ioutil.WriteFile(filepath.Join(p, "bar"), txt, 0644)
-	if err != nil {
-		t.Errorf("Failed to write our data to a file")
-	}
-
-	ConfigOptions.Input = append(ConfigOptions.Input, filepath.Join(p, "bar"))
-	if CheckInput(ConfigOptions.Input[len(ConfigOptions.Input)-1]) {
-		t.Errorf("A missing file was accepted.")
-	}
-
-	//
-	// Cleanup our temporary directory
-	//
-	for _, path := range ConfigOptions.Input {
-		os.RemoveAll(path)
-	}
-}
 
 //
 // Test invoking `gofmt` in a filter.
@@ -324,10 +38,56 @@ func TestFilter(t *testing.T) {
 	}
 }
 
-//
-// Test invoking our driver
-//
-func TestInvoke(t *testing.T) {
+func TestChoose(t *testing.T) {
+
+	//
+	// Test an empty array
+	//
+	all := []finder.Resource{}
+	out := Choose(all, TestRegexp)
+	if len(out) != 0 {
+		t.Errorf("Failed to filter an empty array!")
+	}
+
+	//
+	// Now test a real regexp against these inputs:
+	//
+	in := []finder.Resource{
+		finder.Resource{Filename: "def", Contents: "Steve", Length: 5},
+		finder.Resource{Filename: "abc", Contents: "Kemp", Length: 4}}
+
+	//
+	// Setup a regexp which will exclude no files.
+	//
+	ConfigOptions.Exclude = ""
+	out = Choose(in, TestRegexp)
+	if len(out) != 2 {
+		t.Errorf("Expected all entries to be present, found only:%d", len(out))
+	}
+
+	//
+	// Setup a regexp which will exclude all files.
+	//
+	ConfigOptions.Exclude = "..."
+	out = Choose(in, TestRegexp)
+	if len(out) != 0 {
+		t.Errorf("Expected all entries to be filtered, found:%d", len(out))
+	}
+
+	//
+	// Setup a regexp which will exclude only half
+	//
+	ConfigOptions.Exclude = "a"
+	out = Choose(in, TestRegexp)
+	if len(out) != 1 {
+		t.Errorf("Expected one entry to be filtered, found:%d", len(out))
+	}
+
+}
+
+// TestRenderTemplate ensures that rendering a template with a series
+// of resources works at least minimally.
+func TestRenderTemplate(t *testing.T) {
 
 	//
 	// Create a temporary directory
@@ -336,53 +96,104 @@ func TestInvoke(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error setting up test.")
 	}
+	defer os.RemoveAll(p)
 
 	//
-	// Setup our options.
-	//
-	ConfigOptions.Input = nil
-	ConfigOptions.Input = append(ConfigOptions.Input, p)
-	ConfigOptions.Output = filepath.Join(p, "out.go")
-	ConfigOptions.Verbose = true
-	ConfigOptions.Format = true
-	ConfigOptions.Package = "main"
-
-	//
-	// Create an input-file
+	// Create a single file.
 	//
 	txt := []byte("hello, world!\n")
-	err = ioutil.WriteFile(filepath.Join(p, "bar"), txt, 0644)
+	err = ioutil.WriteFile(filepath.Join(p, "moi.kissa"), txt, 0644)
 	if err != nil {
-		t.Errorf("Failed to write our data to a file")
+		t.Errorf("Error writing file!")
 	}
 
 	//
-	// Run the driver
+	// Create our finder
+	//
+	finder := finder.New()
+
+	//
+	// Find our files
+	//
+	resources, err := finder.FindFiles(p)
+	if err != nil {
+		t.Fatalf("We shouldn't have an error")
+	}
+
+	if len(resources) != 1 {
+		t.Fatalf("We expected to find 1 file, but found %d", len(resources))
+	}
+
+	//
+	// Now render a template.
+	//
+	str, err := RenderTemplate(resources)
+	if err != nil {
+		t.Fatalf("Found error rendering our template")
+	}
+	if !strings.Contains(str, "moi.kissa") {
+		t.Fatalf("Our rendered template didn't contain our filename")
+	}
+}
+
+// TestInplant tests our Implant() function - which is a beast because
+// it uses a configuration-struct to control the input/output.
+//
+// Still we get coverage and perform a start-to-finish test using this
+// approach I guess.
+func TestImplant(t *testing.T) {
+
+	//
+	// Create a temporary directory to hold input files
+	//
+	in, err := ioutil.TempDir(os.TempDir(), "prefix")
+	if err != nil {
+		t.Errorf("Error setting up test.")
+	}
+	defer os.RemoveAll(in)
+
+	//
+	// Create a temporary directory to hold our output
+	out, err := ioutil.TempDir(os.TempDir(), "prefix")
+	if err != nil {
+		t.Errorf("Error setting up test.")
+	}
+	defer os.RemoveAll(out)
+
+	//
+	// Create a single file beneath our input-tree.
+	//
+	txt := []byte("hello, world!\n")
+	err = ioutil.WriteFile(filepath.Join(in, "moi.kissa"), txt, 0644)
+	if err != nil {
+		t.Errorf("Error writing file!")
+	}
+
+	//
+	// Now drive the code
+	//
+	ConfigOptions.Output = filepath.Join(out, "output.go")
+	ConfigOptions.Input = nil
+	ConfigOptions.Input = append(ConfigOptions.Input, in)
+	ConfigOptions.Verbose = true
+	ConfigOptions.Format = true
+	ConfigOptions.Package = "fashion"
+
+	//
+	// Horridly do the necessary.
 	//
 	Implant()
 
 	//
-	// Test that it produced some output we expect
+	// Now look for the output
 	//
-	output, err := ioutil.ReadFile(ConfigOptions.Output)
+	data, err := ioutil.ReadFile(ConfigOptions.Output)
 	if err != nil {
-		t.Errorf("Error reading file")
+		t.Errorf("Failed to read output file")
 	}
 
-	if !strings.Contains(string(output), "bar") {
-		t.Errorf("Rendered template didn't contain 'bar'")
-	}
-
-	//
-	// Remove the input file, so that we get an error
-	//
-	os.Remove(filepath.Join(p, "bar"))
-	os.Remove(ConfigOptions.Output)
-
-	// Cleanup our temporary directory
-	//
-	for _, path := range ConfigOptions.Input {
-		os.RemoveAll(path)
+	if !strings.Contains(string(data), "package fashion") {
+		t.Errorf("Failed to find our package in the output file!")
 	}
 
 }
