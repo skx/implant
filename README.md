@@ -1,4 +1,3 @@
-[![Travis CI](https://img.shields.io/travis/skx/implant/master.svg?style=flat-square)](https://travis-ci.org/skx/implant)
 [![Go Report Card](https://goreportcard.com/badge/github.com/skx/implant)](https://goreportcard.com/report/github.com/skx/implant)
 [![license](https://img.shields.io/github/license/skx/implant.svg)](https://github.com/skx/implant/blob/master/LICENSE)
 [![Release](https://img.shields.io/github/release/skx/implant.svg)](https://github.com/skx/implant/releases/latest)
@@ -105,6 +104,16 @@ The repository contains a number of test-cases, they can can be executed via:
 To receive coverage details:
 
     $ go test -coverprofile=tmp.t ./... && go tool cover -html=tmp.t && rm ./tmp.t
+
+## Github Setup
+
+This repository is configured to run tests upon every commit, and when
+pull-requests are created/updated.  The testing is carried out via
+[.github/run-tests.sh](.github/run-tests.sh) which is used by the
+[github-action-tester](https://github.com/skx/github-action-tester) action.
+
+Releases are automated in a similar fashion via [.github/build](.github/build),
+and the [github-action-publish-binaries](https://github.com/skx/github-action-publish-binaries) action.
 
 Steve
 --
