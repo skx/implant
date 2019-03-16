@@ -24,16 +24,22 @@ can list available files, and extract the contents of specific ones.
 
 ## Installation
 
-If you're already setup for fetching & building golang applications
-you can download, or update, your local copy of the application via:
+There are two ways to install this project from source, which depend on the version of the [go](https://golang.org/) version you're using.
 
-     $ go get -u  github.com/skx/implant
-     $ go install github.com/skx/implant
+### Source Installation go <=  1.11
 
-This is equivalent to cloning our repository and building via:
+If you're using `go` before 1.11 then the following command should fetch/update `overseer`, and install it upon your system:
 
-      $ go get .
-      $ go build .
+     $ go get -u github.com/skx/implant
+
+### Source installation go  >= 1.12
+
+If you're using a more recent version of `go` (which is _highly_ recommended), you need to clone to a directory which is not present upon your `GOPATH`:
+
+    git clone https://github.com/skx/implant
+    cd implant
+    go install
+
 
 If you prefer you can fetch a binary release from our [releases page](https://github.com/skx/implant/releases).
 
