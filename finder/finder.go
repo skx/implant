@@ -54,17 +54,11 @@ func (f *Finder) ShouldInclude(path string) bool {
 	// Is it a regular file?
 	//
 	mode := stat.Mode()
-	if !mode.IsRegular() {
-		//
-		// If it isn't we shouldn't include it.
-		//
-		return false
-	}
 
 	//
-	// OK the file wasn't excluded, so we'll add it.
+	// We only add regular files.
 	//
-	return true
+	return mode.IsRegular()
 }
 
 // FindFiles finds all the files in the given directory, returning an array

@@ -98,7 +98,7 @@ func TestRegexp(x finder.Resource) bool {
 	}
 
 	match, _ := regexp.MatchString(ConfigOptions.Exclude, x.Filename)
-	return match == false
+	return !match
 }
 
 // Implant is our main entry-point.
@@ -132,9 +132,7 @@ func Implant() {
 		//
 		// Append each found-resource to the list.
 		//
-		for _, entry := range entries {
-			all = append(all, entry)
-		}
+		all = append(all, entries...)
 	}
 
 	//
