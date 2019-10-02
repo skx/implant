@@ -2,7 +2,6 @@
 
 # Install tools to test our code-quality
 go get -u golang.org/x/lint/golint
-go get -u golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow
 go get -u honnef.co/go/tools/cmd/staticcheck
 
 
@@ -24,11 +23,6 @@ set -e
 echo "Launching linter .."
 golint -set_exit_status ./...
 echo "Completed linter .."
-
-# Run the shadow-checker
-echo "Launching shadowed-variable check .."
-go vet -vettool=$(which shadow) ./...
-echo "Completed shadowed-variable check .."
 
 # Run golang tests
 go test ./...
