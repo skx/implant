@@ -11,6 +11,7 @@ import (
     "encoding/base64"
     "fmt"
     "io/ioutil"
+    "os"
 )
 
 //
@@ -45,39 +46,73 @@ var RESOURCES = map[string]EmbeddedResource{
 	{{end}}
 }
 
+func getEmbededResources(path string) ([]byte, error) {
+	entry, ok := RESOURCES[path]
+	if !ok {
+		// Give a try to find local resource
+		return nil, nil
+	}
+
+	var raw bytes.Buffer
+	var err error
+
+	// Decode the data.
+	in, err := base64.StdEncoding.DecodeString(entry.Contents)
+	if err != nil {
+		return nil, err
+	}
+
+	// Gunzip the data to the client
+	gr, err := gzip.NewReader(bytes.NewBuffer(in))
+	if err != nil {
+		return nil, err
+	}
+	defer gr.Close()
+	data, err := ioutil.ReadAll(gr)
+	if err != nil {
+		return nil, err
+	}
+	_, err = raw.Write(data)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return it.
+	return raw.Bytes(), nil
+
+}
+
 //
 // Return the contents of a resource.
 //
-func getResource( path string  ) ([]byte, error) {
-	if entry, ok := RESOURCES[path]; ok {
-		var raw bytes.Buffer
-		var err error
-
-		// Decode the data.
-		in, err := base64.StdEncoding.DecodeString(entry.Contents)
-		if err != nil {
-			return nil, err
-		}
-
-		// Gunzip the data to the client
-		gr, err := gzip.NewReader(bytes.NewBuffer(in))
-		if ( err != nil ) {
-			return nil, err
-		}
-		defer gr.Close()
-		data, err := ioutil.ReadAll(gr)
-		if err != nil {
-			return nil, err
-		}
-		_, err = raw.Write(data)
-		if ( err != nil ) {
-			return nil, err
-		}
-
-		// Return it.
-		return raw.Bytes(), nil
+func getResource(path string) ([]byte, error) {
+	content, err := getEmbededResources(path)
+	
+	if err != nil {
+		return nil, err
 	}
-    return nil, fmt.Errorf("failed to find resource '%s'", path)
+	
+	stats, err := os.Stat(path)
+	if err != nil {
+		// Could not find neither on local system.
+		if content == nil {
+			// Neither in embedded system.
+			return nil, fmt.Errorf("failed to find resource '%s'", path)
+		}
+		// return embedded resource
+		return content, nil
+	}
+	// if found in both system return the newest version
+	modtime := stats.ModTime().Unix()
+	if modtime < RESOURCES[path].ModTime {
+		// return embedded resource
+		return content, nil
+	}
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 //

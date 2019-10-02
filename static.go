@@ -11,6 +11,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"os"
 )
 
 //
@@ -38,45 +39,79 @@ var RESOURCES = map[string]EmbeddedResource{
 
 	"data/static.tmpl": {
 		Filename: "data/static.tmpl",
-		Contents: "H4sIAAAAAAAC/5SUUW/bNhDHn8VPcTMwVEINaQ9FHzLkYc2yYUDXDUmHPRhBQ0sn+WCKFEjKriPouw9HUo6RrA99MEAfdf+7+93xqkpUFXzekYOWFMJROuhQo5UeGziQhI78btyWtekrt/9aUT8oqT27sedHU0sF2JB3cCSlYIugjPMl3w+y3ssOYZrKv+NxnoWgfjDWQy4AAFbbk0e3iufa9INF56ruiYZkQ12bhnRXbaXD9++Ste19OpGpyIye1EoUIiV122+xabC5Q2dGWyOQA79DcN6OtR8twnFH9Y7No8MGvAGLtbENNOglKQemZR2U9Q4wiYE9q2k4mdHClrS0p1IsDPH5k9poL0nHsLmx1JGWqgiMtexxDRaV9HRADs4fkR5GzzoNWay9sSd4TKwfX3TlSH63BqmM7sI5+C8xwNETso7UTbhYoGJTBZbYQCO9DGn704CvaUVMMAXAv6WM2Uq6C7Yboz1q7y5tH1F3fgcApH0w/Gmaz9RjMLx/J+alOXe393/9c3dze8/4JfRyWGiR7kAq9Zq4KwNd/nSPp9RN1gojy9ktTfjD8y1+HUzqay2VQuvCJDONxw79UqjLi0doR117MjooHKS9yO+aI25ijQ8vKU0imyYrdYdQngXnWWSraSoXaPO8uoJJZNliuIIX12uRZQvOeLn8S5eR6xW/oXicZzYnusGezuGCf9OEupnnC+ToR6vTNKTWmRbkGXAonknABZ4cBul3qccABeSbB36ta0BrjS24MGoBtbenNZg9XF0/w9uw78PPbOb6GayVRwivvfwwti3aZEZro6AQWVZV8CvykIZk45xmGekQkwPELVDe++Y2LYYyOtyHNPOQzZlhwc5t8P3hGjSpkExmIw9NKuiKLJtT8N9H/UTDOfjyOGtFqL3Iss6eM+EdVX7C4x3KBm0eK/uEx1hcTrpI0fPL+MW3M8iyBlu00NnyRhmHOftzFueQcdGVHPEXpfLOfkd9WfYl6lxzI8p/LXnMWf07s4yc0kSR5/akz1j2A1PIizX7iGwOi+BSpe19ecvNbvNVK0nFR9qSvlivb350b1brMHzF/86wPEhScque963jnSzBKfrGLLu8gM2rNxwmmMH+JLgIPvVyj/nrL9egUOfn6ebWtsbClzUc2CvugefNMUUqG3qAazgw4LdvGccZFXoxi/8CAAD//0G30x18BwAA",
-		Length:   1916,
-		ModTime:  1570055768,
+		Contents: "H4sIAAAAAAAC/6RW32/bNhB+Fv+Kq4GhEmpIeyj6EMwPa5YNA7puSFrsIQgaWjrJB1OkQVJ2HEP/+3AkZQdxg3bbQwv6yPvuu+9+KFUlqgo+rchBSwphJx10qNFKjw1sSUJHfjUsy9r0lVs/VNRvlNSe3djzg6mlAmzIO9iRUrBEUMb5ku83sl7LDuFwKP+Kx3EUgvqNsR5yAQAwW+49ulk816bfWHSu6h5pk2yoa9OQ7qqldPjubbK2vU8nMhWZwZNKv42biUIkdlf9EpsGm2t0ZrA1AjnwKwTn7VD7wSLsVlSv2Dw4bMAbsFgb20CDXpJyYFrGQVmvABMY2COahr0ZLCxJS7svxSQmnp7URntJOobNjaWOtFRFEFvLHudgUUlPW+Tg/Ij0ZvCM05DF2hu7h/sk+v2z8uzIr+YgldFdOAf/KQY4ekTGkboJF5O62FRBVGygkV4G2n6/wXO1okxwCMr+mhizlXQXbJdGe9TePbV9QN35FQCQ9sHwh2k+UY/B8O6tGKfiXF/d/Pn5+vLqhuWX0MvNpBbpDqRS54q7MqjLT9e4T9VkrNC7zG4qwu+eb/FhY1Jda6kUWhdamtW479BPibq8uId20LUnowPCVton/BYc8TbmePdcpYPIDgcrdYdQHgHHUWSzw6GcRBvH2QUcRJZNhgt4dj0XWTbJGS+nX+ky6nrBwxSP48jmpG6wp3O44H+HA+pmHFlyzg469IH9ibzLN9KvUvkKyG/veB7ngNYaWzBj1N7u52DWcLE4SXLLbncioxZemXXIrKrgN25jCd7uWfGWdAMq7IepfiLLLPrBatCk5vyfyEYhMpbbyh2EZVC+H9oWbbSitZGMEBzhF+TGDQWMvZuRDmyZXdwQ5Y1vrtLSKOP7m5BeHlI5yloE9uz6asFMQhJP2aG1kR1nNuhH2hzjTrNaK0LtRdbZIwleXeVH3F2jbNDmMaOPuItJ5aSL7w2cNdiihc6Wl8o4zAuRcexjpLj2Sg70s1J5Z78b+EvEWLDm5d+WPOaM/K8UuY528qWY3jDae843L2Jtn8x6fBHXUNoZpgV57IwwdVOTTt35zeZMWCfxX2jwQmTfyq3tfXnFwG0+ayWpuDVCDx+X+esf3OvZHBLiyKDOS++O8Y0rb7z0U8zziFUFl2ZQDWjjI7hG8iu0YHSaFbd3HvtSZOyeEoTFCYIxPiYn0qcdefL7n3lxYhwkoZwt4ZNwR/nTILMXtdCaQTfMbWm4fIHXhMYdoHGHzsMWrSOjRdabxvMH4mIBQc5pj+VF+VnTQx6VnF799HwLTc8ngf8D75fmivfzy8X82mglWwRk+K+NgNxKUnKpTn8nOJZLglP0wii4vIDbs28P0yDm/GOIzKderjE/fzkHhTo/KsdLqDUWvsxhy17x+3X64qX0bukOFrDlXnzz5ml+Fr0YxT8BAAD//1QjRHo9CgAA",
+		Length:   2621,
+		ModTime:  1570058703,
 	},
+}
+
+func getEmbededResources(path string) ([]byte, error) {
+	entry, ok := RESOURCES[path]
+	if !ok {
+		// Give a try to find local resource
+		return nil, nil
+	}
+
+	var raw bytes.Buffer
+	var err error
+
+	// Decode the data.
+	in, err := base64.StdEncoding.DecodeString(entry.Contents)
+	if err != nil {
+		return nil, err
+	}
+
+	// Gunzip the data to the client
+	gr, err := gzip.NewReader(bytes.NewBuffer(in))
+	if err != nil {
+		return nil, err
+	}
+	defer gr.Close()
+	data, err := ioutil.ReadAll(gr)
+	if err != nil {
+		return nil, err
+	}
+	_, err = raw.Write(data)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return it.
+	return raw.Bytes(), nil
+
 }
 
 //
 // Return the contents of a resource.
 //
 func getResource(path string) ([]byte, error) {
-	if entry, ok := RESOURCES[path]; ok {
-		var raw bytes.Buffer
-		var err error
+	content, err := getEmbededResources(path)
 
-		// Decode the data.
-		in, err := base64.StdEncoding.DecodeString(entry.Contents)
-		if err != nil {
-			return nil, err
-		}
-
-		// Gunzip the data to the client
-		gr, err := gzip.NewReader(bytes.NewBuffer(in))
-		if err != nil {
-			return nil, err
-		}
-		defer gr.Close()
-		data, err := ioutil.ReadAll(gr)
-		if err != nil {
-			return nil, err
-		}
-		_, err = raw.Write(data)
-		if err != nil {
-			return nil, err
-		}
-
-		// Return it.
-		return raw.Bytes(), nil
+	if err != nil {
+		return nil, err
 	}
-	return nil, fmt.Errorf("failed to find resource '%s'", path)
+
+	stats, err := os.Stat(path)
+	if err != nil {
+		// Could not find neither on local system.
+		if content == nil {
+			// Neither in embedded system.
+			return nil, fmt.Errorf("failed to find resource '%s'", path)
+		}
+		// return embedded resource
+		return content, nil
+	}
+	// if found in both system return the newest version
+	modtime := stats.ModTime().Unix()
+	if modtime < RESOURCES[path].ModTime {
+		// return embedded resource
+		return content, nil
+	}
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 //
