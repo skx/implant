@@ -8,7 +8,7 @@ package {{.Package}}
 import (
     "bytes"
     "compress/gzip"
-    "encoding/hex"
+    "encoding/base64"
     "fmt"
     "io/ioutil"
 )
@@ -52,7 +52,7 @@ func getResource( path string  ) ([]byte, error) {
 		var err error
 
 		// Decode the data.
-		in, err := hex.DecodeString(entry.Contents)
+		in, err := base64.StdEncoding.DecodeString(entry.Contents)
 		if err != nil {
 			return nil, err
 		}
