@@ -28,71 +28,65 @@ type EmbeddedResource struct {
 }
 
 //
-// RESOURCES is a simple array containing one entry for each embedded
-// resource.
+// RESOURCES is a map containing all embedded resources. The map key is the
+// file name.
 //
 // It is exposed to callers via the `getResources()` function.
 //
-var RESOURCES []EmbeddedResource
-
-//
-// Populate our resources
-//
-func init() {
-
-    var tmp EmbeddedResource
-
-    {{range .Resources}}
-	tmp.Filename = "{{.Filename}}"
-        tmp.Contents = "{{.Contents}}"
-        tmp.Length = {{.Length}}
-        RESOURCES = append( RESOURCES, tmp )
-    {{end}}
+var RESOURCES = map[string]EmbeddedResource{
+	{{range .Resources}}
+	"{{.Filename}}": {
+		Filename: "{{.Filename}}",
+		Contents: "{{.Contents}}",
+		Length: {{.Length}},
+	},
+	{{end}}
 }
 
 //
 // Return the contents of a resource.
 //
 func getResource( path string  ) ([]byte, error) {
-    for _, entry := range( RESOURCES ) {
-	//
-	// We found the file contents.
-        //
-        if ( entry.Filename == path ) {
-			var raw bytes.Buffer
-                        var err error
+	if entry, ok := RESOURCES[path]; ok {
+		var raw bytes.Buffer
+		var err error
 
-			// Decode the data.
-			in, err := hex.DecodeString(entry.Contents)
-			if err != nil {
-				return nil, err
-			}
+		// Decode the data.
+		in, err := hex.DecodeString(entry.Contents)
+		if err != nil {
+			return nil, err
+		}
 
-			// Gunzip the data to the client
-			gr, err := gzip.NewReader(bytes.NewBuffer(in))
-                        if ( err != nil ) {
-				return nil, err
-                        }
-			defer gr.Close()
-			data, err := ioutil.ReadAll(gr)
-			if err != nil {
-				return nil, err
-			}
-			_, err = raw.Write(data)
-                        if ( err != nil ) {
-				return nil, err
-                        }
+		// Gunzip the data to the client
+		gr, err := gzip.NewReader(bytes.NewBuffer(in))
+		if ( err != nil ) {
+			return nil, err
+		}
+		defer gr.Close()
+		data, err := ioutil.ReadAll(gr)
+		if err != nil {
+			return nil, err
+		}
+		_, err = raw.Write(data)
+		if ( err != nil ) {
+			return nil, err
+		}
 
-			// Return it.
-			return raw.Bytes(), nil
-        }
-    }
+		// Return it.
+		return raw.Bytes(), nil
+	}
     return nil, fmt.Errorf("failed to find resource '%s'", path)
 }
 
 //
-// Return the available resources.
+// Return the available resources in a slice.
 //
 func getResources() []EmbeddedResource {
-    return RESOURCES
+	i := 0
+	ret := make([]EmbeddedResource, len(RESOURCES))
+	for _, v := range RESOURCES {
+		ret[i] = v
+		i++
+	}
+	return ret
 }
