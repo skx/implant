@@ -23,6 +23,9 @@ type Resource struct {
 
 	// Length contains the length of the input file.
 	Length int
+
+	// ModTime contains the file last modification timestamp.
+	ModTime int64
 }
 
 // Finder holds our object-state.
@@ -113,6 +116,13 @@ func (f *Finder) FindFiles(directory string) ([]Resource, error) {
 		}
 		gw.Close()
 
+		// TODO: Maybe there is a better way to do that since stats has
+		// already been called in ShouldInclude().
+		stat, err := os.Stat(file)
+		if err != nil {
+			return nil, err
+		}
+
 		//
 		// Add the filename + data, which is now encoded
 		// such that it is printable in our template.
@@ -120,6 +130,7 @@ func (f *Finder) FindFiles(directory string) ([]Resource, error) {
 		tmp.Filename = file
 		tmp.Contents = b64Buffer.String()
 		tmp.Length = len(data)
+		tmp.ModTime = stat.ModTime().Unix()
 		entries = append(entries, tmp)
 	}
 	return entries, nil

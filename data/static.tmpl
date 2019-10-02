@@ -25,6 +25,7 @@ type EmbeddedResource struct {
     Filename string
     Contents string
     Length   int
+    ModTime  int64
 }
 
 //
@@ -39,6 +40,7 @@ var RESOURCES = map[string]EmbeddedResource{
 		Filename: "{{.Filename}}",
 		Contents: "{{.Contents}}",
 		Length: {{.Length}},
+		ModTime: {{.ModTime}},
 	},
 	{{end}}
 }
