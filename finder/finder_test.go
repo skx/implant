@@ -26,7 +26,7 @@ func TestInclusion(t *testing.T) {
 	if finder.ShouldInclude("/missing/file/or/directory") {
 		t.Fatalf("We should not include files that don't exist!")
 	}
-	if !finder.ShouldInclude("/etc/fstab") {
+	if !finder.ShouldInclude("/etc/hosts") {
 		t.Fatalf("We should include normal files!")
 	}
 }
