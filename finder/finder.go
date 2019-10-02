@@ -102,7 +102,7 @@ func (f *Finder) FindFiles(directory string) ([]Resource, error) {
 		// gzip the data.
 		//
 		var gzipped bytes.Buffer
-		gw, err := gzip.NewWriterLevel(&gzipped, gzip.BestSpeed)
+		gw, err := gzip.NewWriterLevel(&gzipped, gzip.BestCompression)
 		if err != nil {
 			return nil, err
 		}
