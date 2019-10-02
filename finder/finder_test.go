@@ -1,9 +1,10 @@
 package finder
 
 import (
+	"bytes"
+	"compress/gzip"
+	"encoding/hex"
 	"io/ioutil"
-	"os"
-	"path/filepath"
 	"testing"
 )
 
@@ -15,57 +16,91 @@ func TestFinder(t *testing.T) {
 	}
 }
 
-// TestInclusion tests we don't include directories
+// TestInclusion tests we don't include directories, but do include
+// files we expect.
 func TestInclusion(t *testing.T) {
 
 	finder := New()
+	found, err := finder.FindFiles("../_tests")
 
-	if finder.ShouldInclude("/tmp") {
-		t.Fatalf("We should not include directories!")
+	if err != nil {
+		t.Errorf("Unexpected error finding files: %s", err.Error())
 	}
+
+	//
+	// OK we've found files beneath our top-level
+	// _tests directory.
+	//
+	// We know what that should contain, so we can
+	// test the sizes.
+	//
+	if len(found) != 3 {
+		t.Fatalf("We found an unexpected number of files: %d", len(found))
+	}
+
+	//
+	// Ensure we don't have the directories
+	//
 	if finder.ShouldInclude("/missing/file/or/directory") {
 		t.Fatalf("We should not include files that don't exist!")
 	}
-	if !finder.ShouldInclude("/etc/hosts") {
-		t.Fatalf("We should include normal files!")
+	if finder.ShouldInclude("../_test/etc") {
+		t.Fatalf("We should not include directories!")
 	}
 }
 
-// TestFind tests we find some files
+// TestFind ensures found-files have our expected content.
 func TestFind(t *testing.T) {
 
-	//
-	// Create a temporary directory
-	//
-	p, err := ioutil.TempDir(os.TempDir(), "prefix")
-	if err != nil {
-		t.Errorf("Error setting up test.")
-	}
-	defer os.RemoveAll(p)
-
-	//
-	// Create a single file.
-	//
-	txt := []byte("hello, world!\n")
-	err = ioutil.WriteFile(filepath.Join(p, "input"), txt, 0644)
-	if err != nil {
-		t.Errorf("Error writing file!")
-	}
-
-	//
-	// Create our finder
-	//
 	finder := New()
+	found, err := finder.FindFiles("../_tests")
 
-	//
-	// Find our files
-	//
-	resources, err := finder.FindFiles(p)
 	if err != nil {
-		t.Fatalf("We shouldn't have an error")
+		t.Errorf("Unexpected error finding files: %s", err.Error())
 	}
 
-	if len(resources) != 1 {
-		t.Fatalf("We expected to find 1 file, but found %d", len(resources))
+	//
+	// Process the file named `etc/foo/bar/baz.txt`.
+	//
+	for _, entry := range found {
+
+		if entry.Filename == "../_tests/etc/foo/bar/baz.txt" {
+
+			if entry.Length != 15 {
+				t.Errorf("File has wrong length: %d\n", entry.Length)
+			}
+
+			//
+			// Expected content
+			//
+			c := "This is a test\n"
+
+			//
+			// Decode the contents.
+			//
+			decoded, err := hex.DecodeString(entry.Contents)
+			if err != nil {
+				t.Errorf("Error decoding content: %s", err.Error())
+
+			}
+
+			// Gunzip the data to the client
+			gr, err := gzip.NewReader(bytes.NewBuffer(decoded))
+			if err != nil {
+				t.Errorf("Error creating gzip-reader: %s", err.Error())
+			}
+			defer gr.Close()
+			data, err := ioutil.ReadAll(gr)
+			if err != nil {
+				t.Errorf("Error gunzipping: %s", err.Error())
+			}
+
+			if string(data) != c {
+				t.Errorf("File has wrong content: '%s'", entry.Contents)
+			}
+			return
+		}
 	}
+
+	t.Errorf("We didn't find the file we expected in our walk")
 }
