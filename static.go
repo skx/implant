@@ -28,70 +28,64 @@ type EmbeddedResource struct {
 }
 
 //
-// RESOURCES is a simple array containing one entry for each embedded
-// resource.
+// RESOURCES is a map containing all embedded resources. The map key is the
+// file name.
 //
 // It is exposed to callers via the `getResources()` function.
 //
-var RESOURCES []EmbeddedResource
+var RESOURCES = map[string]EmbeddedResource{
 
-//
-// Populate our resources
-//
-func init() {
-
-	var tmp EmbeddedResource
-
-	tmp.Filename = "data/static.tmpl"
-	tmp.Contents = "1f8b08000000000004ffb4554d8fe3360c3ddbbf820d50ac0d04d6bd400edd695a1458ec2e325dec61b1e828366d13ab4806254f2663f8bf17943f269dc9a1970a48a03014f9f81e2929952a057fb5e4a1268370d61e1ab4c83a60058fa4a1a1d0f6c7a27427e57f3c293a7546db20c7e4e407576a035851f0702663e088609c0f45aa54dae9f2876e1086a1f83c6dc7314de9d4390e90a500009be325a0df4cfbd29d3a46ef55f34cdd6c435bba8a6ca35a7c9a4df529cc3b728a5c1fc86cd23c958c4ac1fe74c4aac2ea80def55c229087d022f8c07d197a4638b754b6401e7a8f1504078ca5e30a2a0c9a8c07574b1cd4650b3807035ea359b8b89ee14856f325961909c41797d2d9a0c94e6933c7d490d5268f045b7dc22d301a1de81121b8888d6cd70789531163191c5fe08126a21f5e4972a6d06e411b679bb88fe7971ce0e919258eb655fc6361142b1589c40a2a1d74841d2e1dbe656ba20986a8c8ef642262b1926da2edced98036f86bdb07b44d6801806c48c74589c3fefed397c3ddfe5e24d0e0a52204cdac2f0b47641b7016016de00bd48eff4dbb94b2301f312b057f0609874f9d9bd52bb531c83e36ab08fdd06058c4f759fe00756fcb40cec6088f9aaf807dfbfeba5d16f09f5dd71b1d1044ec0583971e937040964296c390464e246838756fd89cfe1d06d6b641285654e39826e1d4152bbf3bd80cc3fa731ca7fe96256e2be593dbf2f3b5dbacc20e8661de8f638427eb458c1de8ae435b652fb6ada4813c3a0f03da6a1caf64c4d0b38dd44a6747ed5d0d7a6525f21a59b9623e834e87766e12801cb26fdf65d6b780cc8e853a812592ffbd9df5ff650791a92b64208e8952f281af08b5ebe7d68ed7d502a888c16429b56ea9866c8abc320bbbdd842b864d12118ef51904992fdef7758dbc9e7fbdc41999e5e3384d9324510a7ec3d25518d999262b4912b2b14aa9a7c5a76272b90f324259ecf455c23cbad712127eda8125038398129e48b7646228b18d4bca3f7afb4cdd9a72b9444a43688378361c0f497eb9498b8f783ea0ae90b3a9ce8f789e4acdc8e693eab7d6c41fafc866cede60bb7556d628582aac91a1e1e2ce388f592c58885a114e177821007f35266b38bafc674e922491fe6106699e73f19529602619fecfc224ad52308f0685420cb366accfc57b79d5b27c2b02aefc4cc3387dcfbe51dffa148abd0c459d6d6a4d06e3a35493bd7a76defdecdf6db6b177f39ba3a91f35197d342fef90bf39973ecb6fdc7af37d3fa33aecef3f7d39dcedefd331fd270000ffff4909b64a21080000"
-	tmp.Length = 2081
-	RESOURCES = append(RESOURCES, tmp)
-
+	"data/static.tmpl": {
+		Filename: "data/static.tmpl",
+		Contents: "1f8b08000000000002ff9494516fe3360cc79fe54fc10518cec619f69e3be461d775c380c36d6837ec2128ae8a4ddb4464c990e4a4a9e1ef3e50b2d3a0dd3ddc430087a2f8277f2455964959c2df1d396848219ca48316355ae9b186234968c977e3bea84c5fbac37349fda0a4f67c8d6f7e3695548035790727520af608ca385ff0f920ab836c11a6a9f82b7ece7392503f18eb214d000036fbb347b789df95e9078bce95ed0b0d8b0d75656ad26dd9e1f3626a7abf7c9129c98c9ed426c99225a3bb7e8f758df53d3a33da0a811cf80ec1793b567eb408a78eaa8ecda3c31abc018b95b135d4e8252907a6e13828ab0e700906f6124dc3d98c16f6a4a53d17c90a105f5d2aa3bd241d655363a9252d5516006bd9630e1695f47444166727d2c3e8394e4d162b6fec199e16d04f6f5a7222dfe52095d16df80ef7570d70f4821c47ea3a1cac44b12e0348aca1965e86b4fd79c0f7b422269802e0df968cd94aba0db65ba33d6aefae6d9f51b7be0300d23e99d74edcdf3dfcf9cffdeddd03b396d0cb614543ba05a9d47bbcae0828d9f580e7a5751c2b0c27a7b212ffc3f3293e0f666962259542ebc2cc72e94f2dfab52a97664fd08cbaf26474887094f62abf2d2bee62418f6f914c8998262b758b505c02ce732236d354ac84e67973035322c46ab88137c77922c4ca2e1eaeff96c308f186b7257ece739e08fe4d13ea7a9eafc8a21fad5e3abcb4c334202f1c438d5c305c51486190be5bfa069041ba7be4f5cb01ad3536e3fca901d4de9e733007b8d9be32daf1ddc79fd9cc65323f2b4f10d6b7f834360ddac58cd6c68049224459c2afc88317928db32704e9a0c9021d3e17d1e321e49506f90b9b8cbd9be0fcc31634a9a02e6c04a04985408910f3a2f6fba85f68b8a8ad1b562942ed13215a7b91e657a6f882a77b9435da3496f2054fb19a9474b6a8a7d7fad9b73310a2c6062db4b6b855c661caf7398b8b647cad0a56fc45a9b4b5df519f105f639c2d932ffeb5e431e5e8df9965e4b48c1079eec7e2c6613f318534cbf94e22e6b0ded7519ade1777dcdd26dd3492545cbe86f4d51bf9e147f761938769cbfe7768e55192927bf5fa683a7e58253845df185e9766b07bb79b616419ec4f0917c15fbd3c60fade3307853abd8c33b7b63116bee670e45b71bf5f5f842952d9d1236ce1c8803f7e641c1754c80fdd7f010000ffff404485053e070000",
+		Length:   1854,
+	},
 }
 
 //
 // Return the contents of a resource.
 //
 func getResource(path string) ([]byte, error) {
-	for _, entry := range RESOURCES {
-		//
-		// We found the file contents.
-		//
-		if entry.Filename == path {
-			var raw bytes.Buffer
-			var err error
+	if entry, ok := RESOURCES[path]; ok {
+		var raw bytes.Buffer
+		var err error
 
-			// Decode the data.
-			in, err := hex.DecodeString(entry.Contents)
-			if err != nil {
-				return nil, err
-			}
-
-			// Gunzip the data to the client
-			gr, err := gzip.NewReader(bytes.NewBuffer(in))
-			if err != nil {
-				return nil, err
-			}
-			defer gr.Close()
-			data, err := ioutil.ReadAll(gr)
-			if err != nil {
-				return nil, err
-			}
-			_, err = raw.Write(data)
-			if err != nil {
-				return nil, err
-			}
-
-			// Return it.
-			return raw.Bytes(), nil
+		// Decode the data.
+		in, err := hex.DecodeString(entry.Contents)
+		if err != nil {
+			return nil, err
 		}
+
+		// Gunzip the data to the client
+		gr, err := gzip.NewReader(bytes.NewBuffer(in))
+		if err != nil {
+			return nil, err
+		}
+		defer gr.Close()
+		data, err := ioutil.ReadAll(gr)
+		if err != nil {
+			return nil, err
+		}
+		_, err = raw.Write(data)
+		if err != nil {
+			return nil, err
+		}
+
+		// Return it.
+		return raw.Bytes(), nil
 	}
 	return nil, fmt.Errorf("failed to find resource '%s'", path)
 }
 
 //
-// Return the available resources.
+// Return the available resources in a slice.
 //
 func getResources() []EmbeddedResource {
-	return RESOURCES
+	i := 0
+	ret := make([]EmbeddedResource, len(RESOURCES))
+	for _, v := range RESOURCES {
+		ret[i] = v
+		i++
+	}
+	return ret
 }
