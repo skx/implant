@@ -112,6 +112,7 @@ func (f *Finder) FindFiles(directory string) ([]Resource, error) {
 			return nil, err
 		}
 		gw.Close()
+		b64w.Close()
 
 		//
 		// Add the filename + data, which is now encoded
