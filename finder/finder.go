@@ -4,7 +4,7 @@ package finder
 import (
 	"bytes"
 	"compress/gzip"
-	"encoding/hex"
+	"encoding/base64"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -101,8 +101,9 @@ func (f *Finder) FindFiles(directory string) ([]Resource, error) {
 		//
 		// gzip the data.
 		//
-		var gzipped bytes.Buffer
-		gw, err := gzip.NewWriterLevel(&gzipped, gzip.BestCompression)
+		var b64Buffer bytes.Buffer
+		b64w  := base64.NewEncoder(base64.StdEncoding, &b64Buffer)
+		gw, err := gzip.NewWriterLevel(b64w, gzip.BestCompression)
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +118,7 @@ func (f *Finder) FindFiles(directory string) ([]Resource, error) {
 		// such that it is printable in our template.
 		//
 		tmp.Filename = file
-		tmp.Contents = hex.EncodeToString(gzipped.Bytes())
+		tmp.Contents = b64Buffer.String()
 		tmp.Length = len(data)
 		entries = append(entries, tmp)
 	}

@@ -3,7 +3,7 @@ package finder
 import (
 	"bytes"
 	"compress/gzip"
-	"encoding/hex"
+	"encoding/base64"
 	"io/ioutil"
 	"testing"
 )
@@ -78,7 +78,7 @@ func TestFind(t *testing.T) {
 			//
 			// Decode the contents.
 			//
-			decoded, err := hex.DecodeString(entry.Contents)
+			decoded, err := base64.StdEncoding.DecodeString(entry.Contents)
 			if err != nil {
 				t.Errorf("Error decoding content: %s", err.Error())
 
