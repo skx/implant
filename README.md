@@ -28,7 +28,7 @@ There are two ways to install this project from source, which depend on the vers
 
 ### Source Installation go <=  1.11
 
-If you're using `go` before 1.11 then the following command should fetch/update `overseer`, and install it upon your system:
+If you're using `go` before 1.11 then the following command should fetch/update the project and install it upon your system:
 
      $ go get -u github.com/skx/implant
 
