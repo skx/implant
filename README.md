@@ -21,6 +21,17 @@ contains the contents of a particular directory hierarchy.  At run-time you
 can list available files, and extract the contents of specific ones.
 
 
+## Obsolete
+
+go v1.16 makes this tool obsolete, via the addition of the `go embed` syntax
+for embedding resources inside generated binaries.
+
+Further details can be found in the release-notes:
+
+* https://golang.org/doc/go1.16
+
+As a result of this update this repository has been marked read-only on 20/02/2021 and no further development work will be carried out.
+
 
 ## Installation
 
